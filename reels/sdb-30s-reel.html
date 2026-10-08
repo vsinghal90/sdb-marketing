@@ -112,10 +112,12 @@ body{margin:0;background:var(--surround);color:var(--ink);font-family:var(--f-bo
 
 .vo{position:absolute;left:6cqw;right:6cqw;bottom:9cqw;z-index:5;background:rgba(70,18,8,.85);color:#fff;font-size:4.4cqw;line-height:1.35;padding:2.6cqw 3.6cqw;border-radius:3cqw;text-align:center;font-weight:700}
 
-.start{position:absolute;inset:0;z-index:10;display:grid;place-items:center;align-content:center;gap:3cqw;background:rgba(18,11,7,.72);color:#fff;text-align:center;cursor:pointer;border:0;width:100%;font:inherit}
-.start b{font-family:var(--f-title);font-size:8cqw}
-.start span{font-size:3.6cqw;opacity:.85;line-height:1.6}
-.start:focus-visible{outline:3px solid var(--yellow);outline-offset:-6px}
+.start{position:absolute;inset:0;z-index:10;display:grid;place-items:center;align-content:center;gap:5cqw;background:rgba(18,11,7,.72);color:#fff;text-align:center}
+.go{display:grid;gap:3cqw;background:none;border:0;color:#fff;cursor:pointer;font:inherit}
+.go b{font-family:var(--f-title);font-size:8cqw;background:var(--red);padding:2.4cqw 8cqw;border-radius:999px;justify-self:center}
+.go span{font-size:3.6cqw;opacity:.85;line-height:1.6}
+.own{font-size:3.4cqw;padding:1.6cqw 4cqw;border-radius:999px;border:1px solid rgba(255,255,255,.5);cursor:pointer;max-width:86cqw}
+.go:focus-visible,.own:focus-within{outline:3px solid var(--yellow);outline-offset:3px}
 .scene[data-s="2"]::after,.scene[data-s="4"]::after{content:"";position:absolute;inset:0 0 auto;height:62cqw;background:linear-gradient(to bottom,rgba(90,20,8,.7),transparent);pointer-events:none}
 .top-ost{z-index:2}
 .ost{text-shadow:0 .5cqw 0 rgba(90,20,8,.55),0 2px 12px rgba(0,0,0,.45)}
@@ -207,7 +209,11 @@ body{margin:0;background:var(--surround);color:var(--ink);font-family:var(--f-bo
   </section>
 
   <div class="vo" id="vo"></div>
-  <button class="start" id="start" type="button"><b>Start reel</b><span>Click to play from 0s · Space pauses · R restarts<br>V hides captions · F goes full screen</span></button>
+  <div class="start" id="start">
+    <button class="go" id="go" type="button"><b>Start reel</b><span>Plays 30s with music · Space pauses · R restarts<br>V hides captions · M mutes music · F goes full screen</span></button>
+    <label class="own" for="own-file"><span id="own-label">Music: original dhol track. Use my own music file instead</span></label>
+    <input type="file" id="own-file" accept="audio/*" hidden>
+  </div>
 </div>
 
 <script>
@@ -247,16 +253,61 @@ function render(){
   if(i===4)slides(4,l,4/3,0);
   if(i===5){$('c-orders').textContent=fmt(19000*ease((l-.2)/1.8));$('c-cust').textContent=fmt(10000*ease((l-.5)/1.8))}
 }
+/* ---------- music: original dhol + tumbi groove, synthesised in the browser (no licence needed) ---------- */
+let AC=null,bus=null,t0=0,ownBuf=null,ownName='',muted=false;
+const BPM=102,BEAT=60/BPM,SUB=BEAT/3;           // 12/8 bhangra "chaal" feel: 3 subdivisions per beat
+function ctx(){if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();return AC}
+let noiseBuf=null;
+function noise(){if(noiseBuf)return noiseBuf;const a=ctx(),b=a.createBuffer(1,a.sampleRate,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return noiseBuf=b}
+function env(g,at,peak,dec){g.gain.setValueAtTime(0.0001,at);g.gain.exponentialRampToValueAtTime(peak,at+0.005);g.gain.exponentialRampToValueAtTime(0.0001,at+dec)}
+function dagga(at,v=1){const a=ctx(),o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(110,at);o.frequency.exponentialRampToValueAtTime(48,at+0.18);env(g,at,0.9*v,0.42);o.connect(g).connect(bus);o.start(at);o.stop(at+0.5);
+  const n=a.createBufferSource(),f=a.createBiquadFilter(),ng=a.createGain();n.buffer=noise();f.type='lowpass';f.frequency.value=600;env(ng,at,0.35*v,0.08);n.connect(f).connect(ng).connect(bus);n.start(at);n.stop(at+0.1)}
+function tilli(at,v=1){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();f.type='bandpass';f.frequency.value=2600;f.Q.value=1.2;env(g,at,0.5*v,0.07);n.connect(f).connect(g).connect(bus);n.start(at);n.stop(at+0.09);
+  const o=a.createOscillator(),og=a.createGain();o.type='triangle';o.frequency.setValueAtTime(520,at);o.frequency.exponentialRampToValueAtTime(380,at+0.05);env(og,at,0.18*v,0.06);o.connect(og).connect(bus);o.start(at);o.stop(at+0.08)}
+function tumbi(at,freq,v=1){const a=ctx(),o=a.createOscillator(),f=a.createBiquadFilter(),g=a.createGain();o.type='sawtooth';o.frequency.setValueAtTime(freq*1.02,at);o.frequency.exponentialRampToValueAtTime(freq,at+0.03);f.type='bandpass';f.frequency.value=freq*3;f.Q.value=2.5;env(g,at,0.22*v,0.28);o.connect(f).connect(g).connect(bus);o.start(at);o.stop(at+0.32)}
+function pad(at,dur,freqs){const a=ctx();freqs.forEach(fr=>{const o=a.createOscillator(),g=a.createGain(),f=a.createBiquadFilter();o.type='sawtooth';o.frequency.value=fr;f.type='lowpass';f.frequency.value=900;g.gain.setValueAtTime(0.0001,at);g.gain.linearRampToValueAtTime(0.035,at+0.6);g.gain.setValueAtTime(0.035,at+dur-0.6);g.gain.linearRampToValueAtTime(0.0001,at+dur);o.connect(f).connect(g).connect(bus);o.start(at);o.stop(at+dur+0.05)})}
+function whoosh(at){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();n.loop=true;f.type='bandpass';f.Q.value=0.8;f.frequency.setValueAtTime(400,at-0.35);f.frequency.exponentialRampToValueAtTime(5000,at);g.gain.setValueAtTime(0.0001,at-0.35);g.gain.exponentialRampToValueAtTime(0.18,at-0.02);g.gain.exponentialRampToValueAtTime(0.0001,at+0.12);n.connect(f).connect(g).connect(bus);n.start(at-0.36);n.stop(at+0.15)}
+function scoreSynth(T){
+  const D=146.83,notes=[D*2,D*2*1.122,D*2*1.26,D*3,D*2*1.682,D*4];   // D pentatonic for the tumbi riff
+  const riff=[0,2,3,2,4,3,2,0, 3,3,4,5,4,3,2,3];
+  pad(T,3,[D/2,D*1.5/2]);                                            // 0–3s: soft drone under "Ghar ki yaad"
+  for(let s=0;s<2*3;s++){const at=T+1+s*SUB;if(s%3===0)dagga(at,.5);else tilli(at,.4)}
+  const start=T+3,end=T+29.6;                                        // full groove from 3s
+  let i=0;for(let at=start;at<end;at+=SUB,i++){const p=i%12;          // chaal: D . T | T . T | D . T | T D T
+    if(p===0||p===6||p===10)dagga(at,p===0?1:.85);
+    if([2,3,5,8,9,11].includes(p))tilli(at,p===3||p===9?.8:.6)}
+  let k=0;for(let at=T+8;at<T+26;at+=SUB*2,k++){if(k%8!==7)tumbi(at,notes[riff[k%riff.length]],(k%2?.8:1))}
+  pad(T+14,4,[D,D*1.5]);pad(T+26,3.6,[D,D*1.26,D*1.5]);
+  [3,8,14,18,22,26].forEach(s=>whoosh(T+s));
+  [26,26+SUB*2,26+SUB*4].forEach(s=>dagga(T+s,1));dagga(T+29.4,1.1); // end-card hits
+}
+async function startAudio(){
+  const a=ctx();if(a.state==='suspended')await a.resume();
+  if(bus){const old=bus;old.gain.setTargetAtTime(0,a.currentTime,0.02);setTimeout(()=>old.disconnect(),300)}
+  bus=a.createGain();bus.gain.value=muted?0:0.9;bus.connect(a.destination);
+  t0=a.currentTime+0.06;
+  if(ownBuf){const s=a.createBufferSource();s.buffer=ownBuf;s.connect(bus);s.start(t0);s.stop(t0+TOTAL);bus.gain.setValueAtTime(muted?0:0.9,t0+TOTAL-1.5);bus.gain.linearRampToValueAtTime(0,t0+TOTAL)}
+  else scoreSynth(t0);
+}
+
 function tick(ts){
-  if(playing){if(last!=null)t=Math.min(TOTAL-0.001,t+(ts-last)/1000);last=ts;if(t>=TOTAL-0.001)playing=false}else last=null;
+  if(playing){
+    if(AC&&bus&&AC.state==='running')t=Math.min(TOTAL-0.001,Math.max(0,AC.currentTime-t0));
+    else{if(last!=null)t=Math.min(TOTAL-0.001,t+(ts-last)/1000);last=ts}
+    if(t>=TOTAL-0.001)playing=false;
+  }else last=null;
   render();requestAnimationFrame(tick);
 }
-function restart(){t=0;cur=-1;playing=true;last=null;$('start').hidden=true}
-$('start').onclick=restart;
+async function restart(){$('start').hidden=true;cur=-1;t=0;last=null;try{await startAudio()}catch(e){}playing=true}
+function togglePause(){if(!AC){playing=!playing;return}if(playing){playing=false;AC.suspend()}else{AC.resume();playing=true}}
+$('go').onclick=restart;
+$('own-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{ownBuf=await ctx().decodeAudioData(await f.arrayBuffer());ownName=f.name;$('own-label').textContent='Music: '+f.name+' (first 30s)'}catch(err){$('own-label').textContent='That file could not be read. Try an MP3 or WAV.'}};
 addEventListener('keydown',e=>{
-  if(e.key===' '){e.preventDefault();if($('start').hidden)playing=!playing;else restart()}
+  if(e.target.tagName==='INPUT')return;
+  if(e.key===' '){e.preventDefault();if($('start').hidden)togglePause();else restart()}
   else if(e.key==='r'||e.key==='R')restart();
   else if(e.key==='v'||e.key==='V')$('vo').hidden=!$('vo').hidden;
+  else if(e.key==='m'||e.key==='M'){muted=!muted;if(bus)bus.gain.setTargetAtTime(muted?0:0.9,ctx().currentTime,0.03)}
   else if(e.key==='f'||e.key==='F'){(document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.())?.catch?.(()=>{})}
 });
 render();requestAnimationFrame(tick);
