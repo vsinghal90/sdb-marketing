@@ -1,0 +1,132 @@
+{
+  "slug": "khana-khaya-meme-reel",
+  "title": "Khana Khaya",
+  "format": "POV phone call: expectation vs reality",
+  "background": "backgrounds/khana-khaya-pg-room-rani-pink.svg",
+  "default": "north",
+  "variants": {
+    "north": {
+      "label": "North",
+      "contact": "Mummy",
+      "hook": "POV: You moved to <span class=\"sf\">Bengaluru</span><br>and it's 9:47 PM",
+      "lines": {
+        "m1": {
+          "who": "Mummy",
+          "say": "Beta, khana khaya?",
+          "voice": "hf_alpha",
+          "hi": "बेटा, खाना खाया?",
+          "speed": 0.95
+        },
+        "y1": {
+          "who": "Me",
+          "say": "Haan mummy, dal, sabzi, roti… sab khaya",
+          "voice": "hm_psi",
+          "hi": "हाँ मम्मी, दाल, सब्ज़ी, रोटी... सब खाया।",
+          "speed": 1.1
+        },
+        "m2": {
+          "who": "Mummy",
+          "say": "Jhooth mat bolo. Awaaz se pata chal jaata hai.",
+          "voice": "hf_alpha",
+          "hi": "झूठ मत बोलो। आवाज़ से पता चल जाता है।",
+          "speed": 1.1
+        },
+        "m3": {
+          "who": "Mummy",
+          "say": "Haan, ab hua na ghar jaisa khana!",
+          "voice": "hf_alpha",
+          "hi": "हाँ, अब हुआ ना घर जैसा खाना!",
+          "speed": 1.0
+        }
+      },
+      "thali": "dal · sabzi · roti",
+      "meal": "meal_paneer",
+      "mealAlt": "Paneer Paratha Meal: two buttered paneer parathas with curd, green chutney and pickle",
+      "prompt": "Tag the friend whose mummy calls at 9 PM",
+      "comment": "Comment your mummy's line",
+      "same": "Sabki <span class=\"sf\">mummy</span> same hai na?"
+    },
+    "east": {
+      "label": "East",
+      "contact": "Maa",
+      "hook": "POV: You moved to <span class=\"sf\">Bengaluru</span><br>and it's 9:47 PM",
+      "lines": {
+        "m1": {
+          "who": "Maa",
+          "say": "Babu, khana khaye?",
+          "voice": "hf_alpha",
+          "hi": "बाबू, खाना खाए?",
+          "speed": 0.95
+        },
+        "y1": {
+          "who": "Me",
+          "say": "Haan maa, daal-bhaat, sabji… sab khaye",
+          "voice": "hm_psi",
+          "hi": "हाँ माँ, दाल-भात, सब्ज़ी... सब खाए।",
+          "speed": 1.1
+        },
+        "m2": {
+          "who": "Maa",
+          "say": "Jhooth mat bolo babu. Awaaz se pata chal jaata hai.",
+          "voice": "hf_alpha",
+          "hi": "झूठ मत बोलो बाबू। आवाज़ से पता चल जाता है।",
+          "speed": 1.12
+        },
+        "m3": {
+          "who": "Maa",
+          "say": "Haan, ab hua na ghar jaisa khana!",
+          "voice": "hf_alpha",
+          "hi": "हाँ, अब हुआ ना घर जैसा खाना!",
+          "speed": 1.0
+        }
+      },
+      "thali": "daal · bhaat · sabji",
+      "meal": "meal_sattu",
+      "mealAlt": "Sattu Paratha Meal: two sattu parathas with curd, green chutney and pickle",
+      "prompt": "Tag the friend whose maa calls at 9 PM",
+      "comment": "Comment your maa's line",
+      "same": "Sabki <span class=\"sf\">maa</span> same hai na?"
+    },
+    "west": {
+      "label": "West",
+      "contact": "Mummy",
+      "hook": "POV: You moved to <span class=\"sf\">Bengaluru</span><br>and it's 9:47 PM",
+      "lines": {
+        "m1": {
+          "who": "Mummy",
+          "say": "Beta, jamyo ke nahi?",
+          "voice": "hf_alpha",
+          "hi": "बेटा, जम्यो के नहीं?",
+          "speed": 0.95
+        },
+        "y1": {
+          "who": "Me",
+          "say": "Haan mummy, dal-bhaat, rotli, shaak… badhu khadhu",
+          "voice": "hm_psi",
+          "hi": "हाँ मम्मी, दाल-भात, रोटली, शाक... बधु खाधु।",
+          "speed": 1.1
+        },
+        "m2": {
+          "who": "Mummy",
+          "say": "Jhooth mat bolo. Awaaz se pata chal jaata hai.",
+          "voice": "hf_alpha",
+          "hi": "झूठ मत बोलो। आवाज़ से पता चल जाता है।",
+          "speed": 1.1
+        },
+        "m3": {
+          "who": "Mummy",
+          "say": "Haan, ab hua na ghar jaisa khana!",
+          "voice": "hf_alpha",
+          "hi": "हाँ, अब हुआ ना घर जैसा खाना!",
+          "speed": 1.0
+        }
+      },
+      "thali": "dal · bhaat · rotli · shaak",
+      "meal": "meal_aloo",
+      "mealAlt": "Aloo Paratha Meal: two buttered aloo parathas with curd, green chutney and pickle",
+      "prompt": "Tag the friend whose mummy calls at 9 PM",
+      "comment": "Comment your mummy's line",
+      "same": "Sabki <span class=\"sf\">mummy</span> same hai na?"
+    }
+  }
+}

@@ -1,0 +1,470 @@
+<meta charset="utf-8">
+<title>{{TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&display=swap">
+<style>
+/* Meme reel (9:16) for Shuddh Desi Bites. Format: POV phone call, expectation vs reality, for people from North, West and East India living in Bengaluru.
+   Text comes from the meme spec (specs/*.json), one regional variant at a time (#north, #east, #west).
+   All text and characters live inside .box, which IS the platform safe zone (top 14%, bottom 28%, 12% each side).
+   Units inside .box: 1cqw = 1% of the safe zone's width (its height is about 135.7cqw).
+   Gaze: captions sit at about 23-45% of the frame height (box 16-72cqw), the phone, food and faces at 45-60% (box 72-107cqw). */
+:root{
+  --ink:#fff;--ink-soft:rgba(255,255,255,.78);
+  --red:#ea4335;--green:#34a853;--saffron:#fbbc05;--rose:#ff6b8a;
+  --f-title:Georgia,"Times New Roman",serif;--f-sub:"Playfair Display",Georgia,serif;
+  --f-body:"Trebuchet MS","Lucida Grande","Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:#0d0b14;display:grid;place-items:center;overflow:hidden;font-family:var(--f-body);color:var(--ink)}
+.stage{position:relative;height:min(100%,calc(100vw * 16 / 9));aspect-ratio:9/16;max-width:100%;overflow:hidden;background:#000}
+.room{position:absolute;inset:0;width:100%;height:100%;transition:filter .35s}
+.stage[data-cast="gone"] .room,.stage[data-cast="loop"] .room{filter:brightness(.5) blur(.3cqw)}
+.stage[data-cast^="bust"] .room{filter:brightness(.55) saturate(.6)}
+.vig{position:absolute;inset:0;box-shadow:inset 0 0 22vh 6vh rgba(0,0,0,.55);pointer-events:none}
+.grain{position:absolute;inset:-50%;opacity:.06;pointer-events:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");animation:grain .5s steps(4) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:8}
+.flash.go{animation:flash .35s ease-out}
+@keyframes flash{from{opacity:.85}to{opacity:0}}
+.box.shake{animation:shake .35s linear}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-1.6%,.8%) rotate(-.6deg)}40%{transform:translate(1.4%,-1%) rotate(.5deg)}60%{transform:translate(-1%,1%)}80%{transform:translate(.8%,-.6%)}}
+.box{position:absolute;left:12%;top:14%;width:76%;height:58%;container-type:size;z-index:3}
+
+/* captions */
+.scene{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s;z-index:5}
+.scene.on{opacity:1;visibility:visible}
+.txt{position:absolute;left:0;right:0;top:16cqw;display:grid;justify-items:center;text-align:center;gap:2.4cqw}
+.line,.h1,.kicker{text-shadow:0 .4cqw 1.4cqw rgba(0,0,0,.75),0 0 3cqw rgba(20,10,50,.6)}
+.kicker{font-weight:700;font-size:5cqw;letter-spacing:.18em;text-transform:uppercase;color:var(--saffron)}
+.who{font-weight:700;font-size:4cqw;letter-spacing:.14em;text-transform:uppercase;padding:1.1cqw 3.2cqw;border-radius:99px}
+.who.mom{background:var(--rose);color:#2b0c14}.who.me{background:#7cc4ff;color:#0c2236}.who.re{background:#fff;color:#1a1530}
+.h1{font-family:var(--f-title);font-weight:700;font-size:9.4cqw;line-height:1.1}
+.line{font-family:var(--f-sub);font-style:italic;font-weight:700;font-size:7.6cqw;line-height:1.12;max-width:98cqw}
+.sf{color:var(--saffron)}.pk{color:#ffb3c4}
+[data-at]{opacity:0;transform:translateY(3cqw) scale(.96);transition:opacity .3s ease,transform .4s cubic-bezier(.2,1.3,.35,1)}
+[data-at].show{opacity:1;transform:none}
+.slam[data-at]{transform:scale(1.8)}.slam[data-at].show{transform:none;transition:opacity .12s,transform .28s cubic-bezier(.3,1.5,.5,1)}
+
+/* the cast: every visual in the centre band; stage[data-cast] picks the shot */
+.cast>*{position:absolute;opacity:0;transition:none;pointer-events:none}
+
+/* phone (our own drawing, no real app UI) */
+.phone{left:29.5cqw;top:60cqw;width:41cqw;height:72cqw;border-radius:7cqw;background:linear-gradient(160deg,#3b3b46,#121218 40%);padding:1.6cqw;box-shadow:0 3cqw 6cqw rgba(0,0,0,.55),0 0 0 .5cqw #55556a inset;transform-origin:50% 40%}
+.scr{position:relative;width:100%;height:100%;border-radius:5.6cqw;overflow:hidden;background:linear-gradient(180deg,#2b2350,#1a1530 55%,#120f22)}
+.notch{position:absolute;left:50%;top:1.6cqw;width:12cqw;height:2.6cqw;margin-left:-6cqw;border-radius:2cqw;background:#000;z-index:3}
+.sbar{position:absolute;left:4cqw;right:4cqw;top:1.4cqw;font-size:2.4cqw;font-weight:700;display:flex;justify-content:space-between;opacity:.85}
+.ui{position:absolute;inset:0}
+.av{position:absolute;left:50%;top:13cqw;width:16cqw;height:16cqw;margin-left:-8cqw;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffb3c4,#e0507a);display:grid;place-items:center;font-family:var(--f-title);font-weight:700;font-size:8cqw;color:#fff}
+.ring{position:absolute;left:50%;top:21cqw;width:16cqw;height:16cqw;margin:-8cqw 0 0 -8cqw;border-radius:50%;border:.5cqw solid rgba(255,179,196,.8);animation:ringp 1.1s ease-out infinite}
+.ring.b{animation-delay:.55s}
+@keyframes ringp{from{transform:scale(1);opacity:.9}to{transform:scale(2.3);opacity:0}}
+.nm{position:absolute;left:0;right:0;top:32cqw;text-align:center;font-weight:700;font-size:4.6cqw}
+.st{position:absolute;left:0;right:0;top:38.5cqw;text-align:center;font-size:2.8cqw;opacity:.8;letter-spacing:.06em}
+.btn{position:absolute;bottom:7cqw;width:10cqw;height:10cqw;border-radius:50%;display:grid;place-items:center}
+.btn svg{width:5.4cqw;height:5.4cqw}
+.btn.no{left:6cqw;background:#e5484d}.btn.yes{right:6cqw;background:#2fb35a}.btn.end{left:50%;margin-left:-5cqw;background:#e5484d}
+.btn.yes{animation:nudge .55s ease-in-out infinite alternate}
+@keyframes nudge{to{transform:translateY(-1.4cqw)}}
+.waves{position:absolute;left:50%;top:45cqw;width:20cqw;height:7cqw;margin-left:-10cqw;display:flex;gap:1cqw;align-items:center;justify-content:center;opacity:.25}
+.waves i{width:1.4cqw;height:30%;border-radius:1cqw;background:#ffb3c4}
+.stage.talkM .waves{opacity:1}.stage.talkM .waves i{animation:wave .32s ease-in-out infinite alternate}
+.waves i:nth-child(2){animation-delay:.08s!important}.waves i:nth-child(3){animation-delay:.16s!important}.waves i:nth-child(4){animation-delay:.04s!important}.waves i:nth-child(5){animation-delay:.12s!important}
+@keyframes wave{from{height:20%}to{height:100%}}
+.ui.inc,.ui.oncall,.ui.vid{display:none}
+.stage[data-cast="ring"] .ui.inc,.stage[data-cast="loop"] .ui.inc{display:block}
+.stage[data-cast="call"] .ui.oncall,.stage[data-cast^="bust"] .ui.oncall{display:block}
+.stage[data-cast="vcall"] .ui.vid{display:block}
+.stage[data-cast="ring"] .phone{opacity:1;animation:buzz .09s linear infinite}
+@keyframes buzz{0%,100%{transform:rotate(-1.4deg)}50%{transform:rotate(1.4deg) translateX(.4cqw)}}
+.stage[data-cast="call"] .phone{opacity:1;animation:punchin .3s cubic-bezier(.2,.9,.3,1) both}
+@keyframes punchin{from{transform:scale(1.3)}to{transform:none}}
+.stage[data-cast="bust"] .phone{opacity:1;transform:scale(1.07);box-shadow:0 0 6cqw 1cqw rgba(255,60,60,.55),0 0 0 .5cqw #55556a inset}
+.stage[data-cast="bust2"] .phone{opacity:1;transform:scale(1.14);box-shadow:0 0 8cqw 2cqw rgba(255,60,60,.7),0 0 0 .5cqw #55556a inset}
+.stage[data-cast="vcall"] .phone{opacity:1;left:14cqw;width:72cqw;top:50cqw;height:85cqw;animation:punchin .3s cubic-bezier(.2,.9,.3,1) both}
+.vid img{position:absolute;left:-6%;top:22%;width:112%;height:auto;filter:saturate(1.15) brightness(1.06)}
+.vid .self{position:absolute;right:3cqw;top:5cqw;width:14cqw;height:19cqw;border-radius:2.4cqw;background:linear-gradient(180deg,#3d3566,#221c40);border:.4cqw solid rgba(255,255,255,.6);display:grid;place-items:center}
+.vid .self svg{width:9cqw}
+.vid .tagv{position:absolute;left:3cqw;top:5cqw;font-size:3cqw;font-weight:700;background:rgba(0,0,0,.45);padding:.8cqw 2cqw;border-radius:99px}
+.hearts{position:absolute;inset:0}
+.hearts i{position:absolute;bottom:4cqw;font-style:normal;font-size:7cqw;color:#ff5c86;opacity:0;text-shadow:0 .4cqw 1cqw rgba(0,0,0,.4)}
+.stage[data-cast="vcall"] .hearts i{animation:heart 1.6s ease-out infinite}
+.hearts i:nth-child(1){left:8%}.hearts i:nth-child(2){left:28%;animation-delay:.4s!important;font-size:5cqw}.hearts i:nth-child(3){left:52%;animation-delay:.8s!important}.hearts i:nth-child(4){left:74%;animation-delay:.2s!important;font-size:5.5cqw}.hearts i:nth-child(5){left:40%;animation-delay:1.1s!important;font-size:4.5cqw}
+@keyframes heart{0%{transform:translateY(0) scale(.4);opacity:0}15%{opacity:1}100%{transform:translateY(-55cqw) scale(1.2) rotate(12deg);opacity:0}}
+
+/* the lie: a thought bubble with a full thali */
+.bubble{left:6cqw;top:55cqw;width:88cqw;height:62cqw;transform-origin:30% 100%}
+.bubble .cloud{position:absolute;inset:0;border-radius:48% 52% 46% 54%/55% 50% 50% 45%;background:radial-gradient(circle at 40% 30%,#fffdf6,#f3ead7);box-shadow:0 2cqw 5cqw rgba(0,0,0,.4)}
+.bubble .dot{position:absolute;border-radius:50%;background:#f6eedd}
+.bubble .dot.a{left:12cqw;bottom:-8cqw;width:8cqw;height:8cqw}.bubble .dot.b{left:6cqw;bottom:-15cqw;width:4.5cqw;height:4.5cqw}
+.bubble svg{position:absolute;left:8cqw;top:3cqw;width:72cqw}
+.bubble .cap2{position:absolute;left:0;right:0;bottom:4.5cqw;text-align:center;font-family:var(--f-sub);font-style:italic;font-weight:700;font-size:4.6cqw;color:#5a3a12}
+.stage[data-cast="lie"] .bubble{opacity:1;animation:pop .35s cubic-bezier(.2,1.5,.4,1) both}
+.stage[data-cast="lie2"] .bubble{opacity:1;transform:scale(1.1) translateY(-2cqw)}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+.sparkle{animation:twinkle 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 50%}
+@keyframes twinkle{0%,100%{transform:scale(.4);opacity:.3}50%{transform:scale(1);opacity:1}}
+
+/* reality: the desk in the PG room, two sad biscuits and a cutting chai */
+.desk{left:0;top:75cqw;width:100cqw;height:53.3cqw}
+.desk svg{width:100%;height:100%;overflow:visible}
+.stage[data-cast="reality"] .desk{opacity:1;animation:scratchin .3s ease-out both}
+.stage[data-cast="reality2"] .desk{opacity:1;transform:scale(1.18);transform-origin:40% 70%}
+@keyframes scratchin{from{transform:scale(1.25) rotate(-2deg);filter:grayscale(1)}to{transform:none;filter:none}}
+.sweat,.wide{opacity:0}
+.stage[data-cast="reality2"] .sweat,.stage[data-cast="reality2"] .wide{opacity:1}
+.stage[data-cast="reality2"] .sad{opacity:0}
+.stage[data-cast="reality2"] .sweat{animation:drip 1s ease-in infinite}
+@keyframes drip{0%{transform:translateY(0)}100%{transform:translateY(5px)}}
+
+/* plan B: the door opens, the meal arrives */
+.door{left:22cqw;top:52cqw;width:56cqw;height:84cqw;perspective:120cqw}
+.door .frame{position:absolute;inset:0;border:2.2cqw solid #4b3424;border-bottom:0;background:radial-gradient(60% 50% at 50% 55%,#fff1c9,#ffc65c 55%,#e08a2a);box-shadow:0 0 10cqw 3cqw rgba(255,190,90,.55)}
+.door .panel{position:absolute;left:2.2cqw;top:2.2cqw;right:2.2cqw;bottom:0;background:linear-gradient(90deg,#6d4a32,#8a5f40 60%,#5c3e2a);transform-origin:0 50%;border-radius:.6cqw}
+.door .panel::after{content:"";position:absolute;right:4cqw;top:46%;width:3cqw;height:3cqw;border-radius:50%;background:#e2b33c}
+.stage[data-cast="door"] .door{opacity:1}
+.stage[data-cast="door"] .panel{animation:open .6s .15s cubic-bezier(.3,.1,.3,1) both}
+@keyframes open{to{transform:rotateY(-78deg)}}
+.hero{left:0;top:42cqw;width:100cqw;height:92cqw}
+.hrays{position:absolute;left:-40cqw;top:-36cqw;width:180cqw;height:180cqw;background:repeating-conic-gradient(from 0deg,rgba(255,190,80,.2) 0 8deg,transparent 8deg 20deg);-webkit-mask:radial-gradient(closest-side,#000 30%,transparent);mask:radial-gradient(closest-side,#000 30%,transparent);animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.meal{position:absolute;left:11cqw;top:20cqw;width:78cqw;height:auto;filter:drop-shadow(0 2.4cqw 3cqw rgba(0,0,0,.5)) saturate(1.12) brightness(1.05)}
+.hsteam{position:absolute;left:14cqw;top:-10cqw;width:72cqw;height:46cqw}
+.hsteam i{position:absolute;bottom:0;width:15cqw;height:36cqw;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.85),rgba(255,255,255,.3) 55%,transparent);filter:blur(.7cqw);animation:hsteam 1.5s ease-out infinite}
+.hsteam i:nth-child(1){left:4%}.hsteam i:nth-child(2){left:24%;animation-delay:.3s}.hsteam i:nth-child(3){left:46%;animation-delay:.6s}.hsteam i:nth-child(4){left:66%;animation-delay:.15s}.hsteam i:nth-child(5){left:84%;animation-delay:.45s}
+@keyframes hsteam{0%{transform:translateY(30%) scaleX(.5);opacity:0}25%{opacity:1}100%{transform:translateY(-55%) scaleX(1.5) rotate(8deg);opacity:0}}
+.chip{position:absolute;left:50%;top:13cqw;z-index:2;transform:translateX(-50%);white-space:nowrap;font-weight:700;font-size:3.6cqw;background:var(--saffron);color:#2a1d0c;padding:1.2cqw 3.4cqw;border-radius:99px;box-shadow:0 1cqw 2cqw rgba(0,0,0,.35)}
+.stage[data-cast="hero"] .hero{opacity:1;animation:heroin .35s cubic-bezier(.2,1.4,.4,1) both}
+.stage[data-cast="hero2"] .hero{opacity:1;transform:scale(1.06);transform-origin:50% 92%}
+@keyframes heroin{from{transform:scale(1.5)}to{transform:none}}
+.stage:not([data-cast^="hero"]) .hero *{animation-play-state:paused}
+
+/* the comment and tag prompt */
+.prompt{left:3cqw;top:60cqw;width:94cqw}
+.pcard{background:#fffaf0;color:#1a1530;border-radius:4cqw;padding:5cqw 5cqw 5.4cqw;box-shadow:0 2cqw 5cqw rgba(0,0,0,.45);display:grid;gap:3.4cqw;text-align:left}
+.prow{display:flex;align-items:center;gap:3.4cqw;font-weight:700;font-size:6.6cqw;line-height:1.2}
+.prow svg{flex:none;width:12cqw;height:12cqw}
+.prow b{color:#d23a5f}
+.stage[data-cast="prompt"] .prompt{opacity:1;animation:pop .35s cubic-bezier(.2,1.5,.4,1) both}
+
+/* end card */
+.lockup{width:94cqw}.lockup img{display:block;width:100%;height:auto;filter:drop-shadow(0 1.4cqw 3cqw rgba(4,10,22,.35))}
+.promise{font-family:var(--f-sub);font-style:italic;font-weight:700;font-size:7.4cqw;line-height:1.18;text-align:center;white-space:nowrap}
+.rule{width:14cqw;height:.9cqw;border-radius:1cqw;background:var(--red)}
+.avail{display:grid;gap:2cqw;justify-items:center;margin-top:4cqw}
+.avail>span,.avail .logos{opacity:.8}
+.avail>span{font-size:3.4cqw;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.logos{display:flex;gap:2cqw;justify-content:center;align-items:center}
+.logo-chip{overflow:hidden;height:7cqw;padding:0 2.2cqw;border-radius:1.8cqw;background:#fff;display:flex;align-items:center;justify-content:center}
+.logo-chip img{height:4cqw;width:auto;display:block}
+.logo-chip.ownly{background:#ff4b82;padding:0}.logo-chip.ownly img{height:7cqw}
+.zomato{font-weight:700;font-style:italic;font-size:3.8cqw;color:#e23744;letter-spacing:-.02em}
+/* loop: under the end card the phone starts ringing again, so the last frame flows into the first */
+.toast{left:50%;top:121cqw;transform:translateX(-50%);display:flex;align-items:center;gap:2cqw;white-space:nowrap;background:rgba(30,24,56,.92);border:.3cqw solid rgba(255,179,196,.6);padding:1.6cqw 3.6cqw;border-radius:99px;font-weight:700;font-size:3.6cqw}
+.toast i{width:3cqw;height:3cqw;border-radius:50%;background:#2fb35a;animation:ringp 1s ease-out infinite}
+.stage[data-cast="loop"] .toast{opacity:1;animation:tbuzz .09s linear infinite}
+@keyframes tbuzz{0%,100%{transform:translateX(-50%) rotate(-1.5deg)}50%{transform:translateX(-50%) rotate(1.5deg)}}
+
+.safe{position:absolute;left:12%;top:14%;width:76%;height:58%;z-index:9;border:2px dashed rgba(255,80,80,.9);pointer-events:none;box-shadow:0 0 0 999px rgba(255,0,0,.12)}
+.start{position:absolute;inset:0;z-index:10;display:grid;place-items:center;align-content:center;gap:4vh;background:rgba(13,11,20,.86);text-align:center;padding:0 8%}
+.go{display:grid;gap:3vh;background:none;border:0;color:#fff;cursor:pointer;font:inherit}
+.go b{font-size:2.6vh;letter-spacing:.06em;background:var(--red);padding:1.8vh 5vh;border-radius:999px;justify-self:center}
+.go span{font-size:1.7vh;opacity:.8;line-height:1.7}
+.go:focus-visible,.vpick button:focus-visible{outline:3px solid var(--saffron);outline-offset:3px}
+.vpick{display:flex;gap:1.2vh;justify-content:center;align-items:center;font-size:1.6vh}
+.vpick span{opacity:.75;margin-right:.6vh}
+.vpick button{font:inherit;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:.8vh 1.8vh;cursor:pointer}
+.vpick button[aria-pressed="true"]{background:var(--saffron);color:#2a1d0c;border-color:var(--saffron)}
+@media (prefers-reduced-motion:reduce){.grain,.room *,.hrays,.sparkle{animation:none!important}}
+</style>
+
+<div class="stage" id="stage" data-cast="out">
+  <!-- the background comes from the meme spec (backgrounds/*.svg): every meme gets its own -->
+  {{BACKGROUND}}
+
+  <div class="box" id="box">
+    <div class="cast">
+      <!-- phone -->
+      <div class="phone"><div class="scr">
+        <div class="notch"></div>
+        <div class="sbar"><span>9:47</span><span>4G ▮▮▮</span></div>
+        <div class="ui inc">
+          <div class="ring"></div><div class="ring b"></div>
+          <div class="av" data-k="initial">M</div>
+          <div class="nm" data-k="contact">Mummy</div>
+          <div class="st">calling…</div>
+          <div class="btn no"><svg viewBox="0 0 24 24"><path d="M3 14c5-5 13-5 18 0l-2.5 2.5-3-2v-3c-2.2-.8-4.8-.8-7 0v3l-3 2z" fill="#fff"/></svg></div>
+          <div class="btn yes"><svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z" fill="#fff"/></svg></div>
+        </div>
+        <div class="ui oncall">
+          <div class="av" data-k="initial">M</div>
+          <div class="nm" data-k="contact">Mummy</div>
+          <div class="st" id="timer">00:01</div>
+          <div class="waves"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="btn end"><svg viewBox="0 0 24 24"><path d="M3 14c5-5 13-5 18 0l-2.5 2.5-3-2v-3c-2.2-.8-4.8-.8-7 0v3l-3 2z" fill="#fff"/></svg></div>
+        </div>
+        <div class="ui vid">
+          <img class="ph" data-img="meal" alt="">
+          <div class="tagv" data-k="contact">Mummy</div>
+          <div class="self"><svg viewBox="0 0 40 40"><circle cx="20" cy="14" r="8" fill="#b9a8ff"/><path d="M5 40c2-10 8-14 15-14s13 4 15 14z" fill="#b9a8ff"/></svg></div>
+          <div class="waves" style="top:auto;bottom:4cqw"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="hearts"><i>♥</i><i>♥</i><i>♥</i><i>♥</i><i>♥</i></div>
+        </div>
+      </div></div>
+
+      <!-- the lie -->
+      <div class="bubble">
+        <div class="dot a"></div><div class="dot b"></div><div class="cloud"></div>
+        <svg viewBox="0 0 300 190" aria-hidden="true">
+          <ellipse cx="150" cy="100" rx="128" ry="74" fill="#c9ccd2"/><ellipse cx="150" cy="96" rx="120" ry="68" fill="#e8eaee"/><ellipse cx="150" cy="96" rx="104" ry="56" fill="none" stroke="#d3d6dc" stroke-width="2"/>
+          <ellipse cx="96" cy="70" rx="30" ry="18" fill="#a9adb5"/><ellipse cx="96" cy="67" rx="27" ry="14" fill="#f2b632"/><ellipse cx="88" cy="64" rx="8" ry="3" fill="#ffd96a"/>
+          <ellipse cx="160" cy="58" rx="30" ry="18" fill="#a9adb5"/><ellipse cx="160" cy="55" rx="27" ry="14" fill="#6a8f2a"/><circle cx="150" cy="53" r="4" fill="#e9a23b"/><circle cx="166" cy="57" r="4" fill="#e9a23b"/><circle cx="160" cy="50" r="3" fill="#c9d77a"/>
+          <ellipse cx="218" cy="78" rx="28" ry="17" fill="#a9adb5"/><ellipse cx="218" cy="75" rx="25" ry="13" fill="#fbf7ee"/><circle cx="212" cy="74" r="2" fill="#6a8f2a"/>
+          <ellipse cx="128" cy="124" rx="52" ry="22" fill="#d79a52"/><ellipse cx="136" cy="118" rx="52" ry="22" fill="#e6ad62"/><g fill="#9c5e22" opacity=".55"><circle cx="118" cy="114" r="3"/><circle cx="146" cy="122" r="3"/><circle cx="160" cy="112" r="2.4"/><circle cx="126" cy="126" r="2.2"/></g>
+          <ellipse cx="206" cy="124" rx="34" ry="16" fill="#f6f0e2"/><g fill="#fff"><circle cx="196" cy="120" r="3"/><circle cx="212" cy="126" r="3"/><circle cx="220" cy="118" r="3"/></g>
+          <path class="sparkle" d="M262 30 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z" fill="#f2b632"/><path class="sparkle" style="animation-delay:.5s" d="M40 40 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2z" fill="#f2b632"/>
+        </svg>
+        <div class="cap2" data-k="thali">dal · sabzi · roti</div>
+      </div>
+
+      <!-- the reality: generic biscuits (no brand) and a cutting chai, sad faces -->
+      <div class="desk">
+        <svg viewBox="8 2 90 48" aria-hidden="true">
+          <ellipse cx="40" cy="46.5" rx="34" ry="7" fill="#d9dbe2"/><ellipse cx="40" cy="45.5" rx="29" ry="5.4" fill="#f1f2f5"/>
+          <g transform="translate(27 31) scale(1.5)"><circle r="10.5" fill="#c9a065"/><circle r="9" fill="#d9b178"/><g fill="#a77b42"><circle cx="-4" cy="-4" r=".9"/><circle cx="3" cy="-5" r=".9"/><circle cx="5" cy="2" r=".9"/><circle cx="-5" cy="3" r=".9"/></g>
+            <g class="sad" stroke="#3a2510" stroke-width="1.1" fill="none" stroke-linecap="round"><path d="M-4.5 -1.4 l2.4 .8 M4.5 -1.4 l-2.4 .8"/><path d="M-3 4.6 q3 -2.4 6 0"/></g>
+            <g class="wide"><circle cx="-3.2" cy="-.6" r="1.6" fill="#fff" stroke="#3a2510" stroke-width=".6"/><circle cx="3.2" cy="-.6" r="1.6" fill="#fff" stroke="#3a2510" stroke-width=".6"/><circle cx="-3.2" cy="-.4" r=".7" fill="#3a2510"/><circle cx="3.2" cy="-.4" r=".7" fill="#3a2510"/><ellipse cx="0" cy="4.6" rx="1.6" ry="1.9" fill="#3a2510"/></g>
+            <path class="sweat" d="M8 -9 q-1.6 3 0 4 q1.6 -1 0 -4z" fill="#dff3ff" stroke="#5d9bcf" stroke-width=".4"/></g>
+          <g transform="translate(53 33) rotate(12) scale(1.5)"><circle r="10.5" fill="#c9a065"/><circle r="9" fill="#d9b178"/><g fill="#a77b42"><circle cx="-4" cy="-4" r=".9"/><circle cx="3" cy="-5" r=".9"/><circle cx="5" cy="2" r=".9"/><circle cx="-5" cy="3" r=".9"/></g>
+            <g class="sad" stroke="#3a2510" stroke-width="1.1" fill="none" stroke-linecap="round"><path d="M-4.5 -1.4 l2.4 .8 M4.5 -1.4 l-2.4 .8"/><path d="M-3 4.6 q3 -2.4 6 0"/></g>
+            <g class="wide"><circle cx="-3.2" cy="-.6" r="1.6" fill="#fff" stroke="#3a2510" stroke-width=".6"/><circle cx="3.2" cy="-.6" r="1.6" fill="#fff" stroke="#3a2510" stroke-width=".6"/><circle cx="-3.2" cy="-.4" r=".7" fill="#3a2510"/><circle cx="3.2" cy="-.4" r=".7" fill="#3a2510"/><ellipse cx="0" cy="4.6" rx="1.6" ry="1.9" fill="#3a2510"/></g></g>
+          <!-- cutting chai glass -->
+          <g transform="translate(83 18) scale(1.4)"><path d="M-8 0 h16 l-2 20 h-12 z" fill="rgba(230,240,255,.35)" stroke="rgba(255,255,255,.7)" stroke-width=".7"/><path d="M-7.3 6 h14.6 l-1.4 14 h-11.8 z" fill="#b5763a"/><path d="M-7.3 6 h14.6" stroke="#e0b07a" stroke-width="1"/>
+            <g class="sad" stroke="#3a1c08" stroke-width="1" fill="none" stroke-linecap="round"><path d="M-4 9.6 l2 .7 M4 9.6 l-2 .7"/><path d="M-2.6 15 q2.6 -2 5.2 0"/></g>
+            <g class="wide"><circle cx="-2.6" cy="10" r="1.4" fill="#fff"/><circle cx="2.6" cy="10" r="1.4" fill="#fff"/><circle cx="-2.6" cy="10.2" r=".6" fill="#3a1c08"/><circle cx="2.6" cy="10.2" r=".6" fill="#3a1c08"/><ellipse cx="0" cy="15" rx="1.3" ry="1.6" fill="#3a1c08"/></g>
+            <path d="M-3 -2 q2 -4 0 -8 M3 -2 q2 -4 0 -8" stroke="rgba(255,255,255,.35)" stroke-width=".8" fill="none"/></g>
+        </svg>
+      </div>
+
+      <!-- plan B -->
+      <div class="door"><div class="frame"></div><div class="panel"></div></div>
+      <div class="hero">
+        <div class="hrays"></div>
+        <div class="hsteam"><i></i><i></i><i></i><i></i><i></i></div>
+        <img class="ph meal" data-img="meal" data-k-alt="mealAlt" alt="">
+        <div class="chip">Cooked in our kitchen every day</div>
+      </div>
+
+      <!-- the prompt: tag a friend, comment -->
+      <div class="prompt"><div class="pcard">
+        <div class="prow"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#ffe1e8"/><circle cx="15" cy="16" r="5" fill="#d23a5f"/><circle cx="27" cy="17" r="4" fill="#d23a5f" opacity=".6"/><path d="M6 31c1.5-6 5-8.6 9-8.6s7.5 2.6 9 8.6z M21 30c1-4 3.4-5.8 6-5.8s5 1.8 6 5.8z" fill="#d23a5f"/></svg><span data-k="prompt">Tag the friend whose mummy calls at 9 PM</span></div>
+        <div class="prow"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#ffe1e8"/><path d="M10 12h20a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H18l-6 5v-5h-2a2 2 0 0 1-2-2V14a2 2 0 0 1 2-2z" fill="#d23a5f"/><g fill="#fff"><circle cx="15" cy="19.5" r="1.6"/><circle cx="20" cy="19.5" r="1.6"/><circle cx="25" cy="19.5" r="1.6"/></g></svg><span><span data-k="comment">Comment your mummy's line</span> <b>↓</b></span></div>
+      </div></div>
+
+      <div class="toast"><i></i><span data-k="contact">Mummy</span>&nbsp;calling…</div>
+    </div>
+
+    <!-- 0 · hook: the phone rings from frame one, POV line -->
+    <section class="scene" data-s="0"><div class="txt">
+      <div class="h1" data-at="0" data-k="hook">POV</div>
+    </div></section>
+    <!-- 1 · answer: "khana khaya?" -->
+    <section class="scene" data-s="1"><div class="txt">
+      <div class="who mom" data-at="0" data-k="lines.m1.who">Mummy</div>
+      <div class="line pk" data-at=".15" data-k="lines.m1.say"></div>
+    </div></section>
+    <!-- 2 · the lie -->
+    <section class="scene" data-s="2"><div class="txt">
+      <div class="who me" data-at="0">Me</div>
+      <div class="line" data-at=".15" data-k="lines.y1.say"></div>
+    </div></section>
+    <!-- 3 · reality -->
+    <section class="scene" data-s="3"><div class="txt">
+      <div class="who re slam" data-at="0">Reality</div>
+      <div class="line" data-at=".25">2 biscuit aur ek chai</div>
+    </div></section>
+    <!-- 4 · busted -->
+    <section class="scene" data-s="4"><div class="txt">
+      <div class="who mom" data-at="0" data-k="lines.m2.who">Mummy</div>
+      <div class="line pk" data-at=".1" data-k="lines.m2.say"></div>
+    </div></section>
+    <!-- 5 · plan B -->
+    <section class="scene" data-s="5"><div class="txt">
+      <div class="kicker" data-at="0">Plan B</div>
+      <div class="line slam" data-at=".6"><span class="sf">Ghar jaisa</span> paratha, garam garam</div>
+    </div></section>
+    <!-- 6 · video call -->
+    <section class="scene" data-s="6"><div class="txt" style="top:12cqw">
+      <div class="who mom" data-at="0" data-k="lines.m3.who">Mummy</div>
+      <div class="line pk" data-at=".15" data-k="lines.m3.say"></div>
+    </div></section>
+    <!-- 7 · prompt -->
+    <section class="scene" data-s="7"><div class="txt">
+      <div class="h1" data-at="0" data-k="same"></div>
+    </div></section>
+    <!-- 8 · end card with the sound logo, then 9 · the phone rings again (loop) -->
+    <section class="scene" data-s="8"><div class="txt" style="top:16cqw;gap:6cqw">
+      <div class="promise" data-at=".2">Parathas rolled and cooked<br><span class="sf">hot when you order</span></div>
+      <div class="rule" data-at=".6"></div>
+      <div class="lockup" data-at="1.15"><img src="{{LOCKUPT}}" alt="Shuddh Desi Bites, Quality meets Value"></div>
+      <div class="avail" data-at="2.3"><span>Available on</span>
+        <div class="logos">
+          <span class="logo-chip"><span class="zomato">zomato</span></span>
+          <span class="logo-chip"><img src="{{SWIGGY}}" alt="Swiggy"></span>
+          <span class="logo-chip ownly"><img src="{{OWNLY}}" alt="Ownly"></span>
+        </div>
+      </div>
+    </div></section>
+  </div>
+  <div class="flash" id="flash"></div><div class="vig"></div><div class="grain"></div>
+  <div class="safe" id="safeguide" hidden></div>
+  <div class="start" id="start">
+    <div class="vpick" id="vpick"><span>Version</span></div>
+    <button class="go" id="go" type="button"><b>Start reel</b><span id="golen">Plays with sound · Space pauses · R restarts<br>V mutes the voices · M mutes all · F full screen · Z shows the safe zone</span></button>
+  </div>
+</div>
+
+<script>
+{{SOUNDLOGO}}
+const IMG={{IMGS}},SPEC={{SPEC}},VOICE={{VOICE}};
+/* the meme spec picks the words, voices and dish; the hash picks the regional version (#north, #east, #west; add &t=5 to freeze a frame) */
+const H=new URLSearchParams(location.hash.slice(1).replace(/^(north|east|west)\b/,'v=$1'));
+let VAR=SPEC.variants[H.get('v')]?H.get('v'):SPEC.default;
+/* d: seconds on screen. shots: [local second, camera]. fx: [local second,'shake'|'flash']. vo: [line, local second]. mtalk: the call waves move while mummy talks */
+const S=[
+ {d:2.4,shots:[[0,'ring']]},
+ {d:2,shots:[[0,'call']],vo:[['m1',.2]]},
+ {d:3.6,shots:[[0,'lie'],[1.6,'lie2']],vo:[['y1',.15]]},
+ {d:1.8,shots:[[0,'reality']],fx:[[0,'shake']]},
+ {d:3.8,shots:[[0,'bust'],[1.5,'reality2'],[2.6,'bust2']],fx:[[.1,'shake'],[2.6,'shake']],vo:[['m2',.1]]},
+ {d:2.6,shots:[[0,'door'],[.6,'hero'],[1.8,'hero2']],fx:[[.6,'flash'],[.6,'shake']]},
+ {d:2.8,shots:[[0,'vcall']],vo:[['m3',.2]]},
+ {d:2.2,shots:[[0,'prompt']]},
+ {d:4,shots:[[0,'gone']]},
+ {d:.8,shots:[[0,'loop']]}
+];
+const starts=[];let acc=0;S.forEach(s=>{starts.push(acc);acc+=s.d});const TOTAL=+acc.toFixed(2);
+const LOGO_T=starts[8];
+const $=id=>document.getElementById(id),stage=$('stage');
+const get=(o,p)=>p.split('.').reduce((a,k)=>a&&a[k],o);
+function applyVariant(v){
+  VAR=v;const V=SPEC.variants[v];V.initial=V.contact[0];
+  document.querySelectorAll('[data-k]').forEach(e=>{const x=get(V,e.dataset.k);if(x!=null)e.innerHTML=x});
+  document.querySelectorAll('[data-k-alt]').forEach(e=>e.alt=get(V,e.dataset.kAlt)||'');
+  document.querySelectorAll('img.ph').forEach(p=>{const k=p.dataset.img==='meal'?V.meal:p.dataset.img;if(IMG[k])p.src=IMG[k]});
+  document.querySelectorAll('.vpick button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
+}
+Object.entries(SPEC.variants).forEach(([k,V])=>{const b=document.createElement('button');b.type='button';b.dataset.v=k;b.textContent=V.label;b.onclick=()=>{applyVariant(k);history.replaceState(null,'','#'+k)};$('vpick').append(b)});
+applyVariant(VAR);
+$('golen').firstChild.textContent='Plays '+Math.round(TOTAL)+'s with sound · Space pauses · R restarts';
+if(H.has('safe')||location.hash.includes('safe'))$('safeguide').hidden=false;
+const scenes=[...document.querySelectorAll('.scene')];
+const sceneOf=i=>scenes[Math.min(i,scenes.length-1)];
+let t=0,playing=false,last=null,cur=-1;
+function setScene(i){const el=sceneOf(i);if(el===cur)return;cur=el;scenes.forEach(s=>s.classList.remove('on'));el.classList.add('on')}
+const within=(l,w)=>(w||[]).some(([a,b])=>l>=a&&l<b);
+let fxDone={},vlen={};
+function render(){
+  let i=S.length-1;for(let k=0;k<S.length;k++){if(t<starts[k]+S[k].d){i=k;break}}
+  if(t===0&&!playing){stage.dataset.cast='out';scenes.forEach(s=>s.classList.remove('on'));cur=-1;return}
+  setScene(i);const l=t-starts[i];
+  let shot=S[i].shots[0][1];S[i].shots.forEach(([a,c])=>{if(l>=a)shot=c});
+  if(stage.dataset.cast!==shot)stage.dataset.cast=shot;
+  const sl=t-starts[sceneOf(i)===scenes[8]?8:i];
+  sceneOf(i).querySelectorAll('[data-at]').forEach(e=>e.classList.toggle('show',sl>=+e.dataset.at&&!(e.dataset.to&&sl>=+e.dataset.to)));
+  (S[i].fx||[]).forEach(([a,f])=>{const key=i+':'+a+f;const on=l>=a&&l<a+.35;
+    if(on&&!fxDone[key]){fxDone[key]=1;const el=f==='flash'?$('flash'):$('box');el.classList.remove(f==='flash'?'go':'shake');void el.offsetWidth;el.classList.add(f==='flash'?'go':'shake')}
+    if(l<a)fxDone[key]=0});
+  // mummy's voice moves the call waves; the call timer counts from the answer
+  const talk=(S[i].vo||[]).some(([k,a])=>k[0]==='m'&&l>=a&&l<a+(vlen[VAR+'_'+k]||2));
+  stage.classList.toggle('talkM',talk);
+  if(t>=starts[1]&&t<starts[5]){const s=Math.floor(t-starts[1])+1;$('timer').textContent='00:'+String(s).padStart(2,'0')}
+}
+
+/* ---------- voices: offline Hindi TTS clips per regional version (voice/<slug>/<version>_<line>.wav) ---------- */
+let voOff=false,voBus=null,voBufs={};
+async function loadVoices(a){for(const k in VOICE){if(voBufs[k])continue;try{voBufs[k]=await a.decodeAudioData(await (await fetch(VOICE[k])).arrayBuffer());vlen[k]=voBufs[k].duration}catch(e){}}return voBufs}
+
+/* ---------- sound: ringtone, a lo-fi chai groove, record scratch, doorbell, a bright hit for plan B. Synthesised here, no licence needed ---------- */
+let AC=null,bus=null,logoBus=null,t0=0,muted=false;const VOL=0.85;
+function ctx(){if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();return AC}
+let noiseBuf=null;
+function noise(){if(noiseBuf)return noiseBuf;const a=ctx(),b=a.createBuffer(1,a.sampleRate*2,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return noiseBuf=b}
+function env(g,at,peak,dec,att=.005){g.gain.setValueAtTime(0.0001,at);g.gain.exponentialRampToValueAtTime(peak,at+att);g.gain.exponentialRampToValueAtTime(0.0001,at+att+dec)}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function tone(at,m,dur,type='sine',v=.1,dest){const a=ctx(),o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=mtof(m);env(g,at,v,dur);o.connect(g).connect(dest||bus);o.start(at);o.stop(at+dur+.05)}
+function marimba(at,m,v=1){tone(at,m,.35,'sine',.16*v);tone(at,m+24,.08,'sine',.03*v)}
+function ringtone(at,len){for(let x=0;x<len-.2;x+=1.2){[76,79,83,79,76,83].forEach((m,k)=>marimba(at+x+k*.1,m,.9))}}
+function vibrate(at,len){const a=ctx();for(let x=0;x<len;x+=1.2){const o=a.createOscillator(),g=a.createGain(),f=a.createBiquadFilter();o.type='sawtooth';o.frequency.value=58;f.type='lowpass';f.frequency.value=180;g.gain.setValueAtTime(.0001,at+x);g.gain.exponentialRampToValueAtTime(.18,at+x+.03);g.gain.setValueAtTime(.18,at+x+.5);g.gain.exponentialRampToValueAtTime(.0001,at+x+.6);o.connect(f).connect(g).connect(bus);o.start(at+x);o.stop(at+x+.65)}}
+function kick(at,v=1){const a=ctx(),o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(140,at);o.frequency.exponentialRampToValueAtTime(45,at+.12);env(g,at,.7*v,.22);o.connect(g).connect(bus);o.start(at);o.stop(at+.3)}
+function snare(at,v=1){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();f.type='bandpass';f.frequency.value=1800;env(g,at,.22*v,.14);n.connect(f).connect(g).connect(bus);n.start(at);n.stop(at+.2)}
+function hat(at,v=1){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();f.type='highpass';f.frequency.value=7000;env(g,at,.06*v,.04);n.connect(f).connect(g).connect(bus);n.start(at);n.stop(at+.06)}
+function keys(at,notes,dur,v=1){notes.forEach(m=>{tone(at,m,dur,'triangle',.035*v);tone(at+.012,m+12,dur*.6,'sine',.012*v)})}
+function groove(from,to,v=1){const b=60/90;const C=[[50,57,60,64],[55,59,62,65],[48,55,59,64],[45,52,55,60]];let bar=0;
+  for(let x=from;x<to-.05;x+=b*4,bar++){const ch=C[bar%4];keys(x,ch,b*3.6,v);tone(x,ch[0]-12,b*1.8,'sine',.12*v);
+    [[0,'k'],[1,'s'],[2.5,'k'],[3,'s']].forEach(([q,w])=>{const at=x+q*b;if(at<to-.02)(w==='k'?kick:snare)(at,v)});
+    for(let e=0;e<8;e++){const at=x+e*b/2;if(at<to-.02)hat(at,v*(e%2?.6:1))}}}
+function scratch(at){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();f.type='bandpass';f.Q.value=6;f.frequency.setValueAtTime(2600,at);f.frequency.exponentialRampToValueAtTime(300,at+.16);f.frequency.exponentialRampToValueAtTime(1800,at+.26);env(g,at,.5,.3,.01);n.connect(f).connect(g).connect(bus);n.start(at);n.stop(at+.35)}
+function wah(at){[[55,.3],[54,.3],[53,.7]].reduce((x,[m,d])=>{tone(x,m,d,'sawtooth',.07);return x+d},at)}
+function heart(at,v=1){[0,.2].forEach((d,k)=>{const a=ctx(),o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(75,at+d);o.frequency.exponentialRampToValueAtTime(42,at+d+.18);env(g,at+d,(k?.45:.75)*v,.28);o.connect(g).connect(bus);o.start(at+d);o.stop(at+d+.32)})}
+function dingdong(at){[[76,0],[72,.45]].forEach(([m,d])=>{tone(at+d,m,1.1,'sine',.2);tone(at+d,m+12,.5,'sine',.05);tone(at+d,m+19,.25,'sine',.02)})}
+function brass(at,notes,dur,v=1){const a=ctx(),f=a.createBiquadFilter(),g=a.createGain();f.type='lowpass';f.frequency.setValueAtTime(3400,at);f.frequency.exponentialRampToValueAtTime(900,at+dur);
+  g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(.11*v,at+.015);g.gain.setValueAtTime(.09*v,at+Math.max(.03,dur-.15));g.gain.exponentialRampToValueAtTime(.0001,at+dur+.2);f.connect(g).connect(bus);
+  notes.forEach(m=>[-7,7].forEach(c=>{const o=a.createOscillator();o.type='sawtooth';o.frequency.value=mtof(m);o.detune.value=c;o.connect(f);o.start(at);o.stop(at+dur+.25)}))}
+function crash(at,v=1){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();f.type='highpass';f.frequency.value=4500;env(g,at,.2*v,1.4);n.connect(f).connect(g).connect(bus);n.start(at);n.stop(at+1.5)}
+function pop(at){tone(at,84,.08,'sine',.08);tone(at+.03,91,.06,'sine',.05)}
+function riser(at,len){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();n.loop=true;f.type='bandpass';f.Q.value=1.2;f.frequency.setValueAtTime(500,at-len);f.frequency.exponentialRampToValueAtTime(8000,at);g.gain.setValueAtTime(.0001,at-len);g.gain.exponentialRampToValueAtTime(.1,at-.01);g.gain.exponentialRampToValueAtTime(.0001,at+.03);n.connect(f).connect(g).connect(bus);n.start(at-len);n.stop(at+.05)}
+function score(T){
+  const s=starts;   // cues follow scene starts
+  ringtone(T,s[1]);vibrate(T,s[1]);
+  tone(T+s[1],88,.05,'square',.03);   // the answer click
+  groove(T+s[1]+.1,T+s[3],.7);
+  scratch(T+s[3]);wah(T+s[3]+.35);
+  heart(T+s[4]+.1,.9);heart(T+s[4]+1.1,.9);heart(T+s[4]+2.1,1);heart(T+s[4]+3.1,1);
+  dingdong(T+s[5]);
+  const hit=T+s[5]+.6;brass(hit,[62,66,69,74],1,1.1);crash(hit,1);
+  groove(T+s[5]+1.2,T+s[8]-.3,1);
+  for(let x=T+s[6]+.4;x<T+s[7]-.2;x+=.4)pop(x);
+  riser(T+LOGO_T-.25,1);
+  ringtone(T+starts[9],S[9].d);vibrate(T+starts[9],S[9].d);
+}
+async function startAudio(){
+  const a=ctx();if(a.state==='suspended')await a.resume();
+  [bus,logoBus,voBus].forEach(old=>{if(old){old.gain.setTargetAtTime(0,a.currentTime,0.02);setTimeout(()=>old.disconnect(),300)}});
+  bus=a.createGain();bus.gain.value=muted?0:VOL;const lim=a.createDynamicsCompressor();lim.threshold.value=-10;lim.knee.value=6;lim.ratio.value=12;lim.attack.value=.003;lim.release.value=.15;bus.connect(lim).connect(a.destination);
+  const vb=await loadVoices(a);
+  t0=a.currentTime+0.06;score(t0);
+  voBus=a.createGain();voBus.gain.value=voOff||muted?0:1.15;voBus.connect(lim);
+  S.forEach((s,i)=>(s.vo||[]).forEach(([k,at])=>{const b=vb[VAR+'_'+k];if(!b)return;const src=a.createBufferSource();src.buffer=b;src.connect(voBus);
+    const w=t0+starts[i]+at;src.start(w);
+    if(!muted){bus.gain.setTargetAtTime(VOL*.35,w-.05,.04);bus.gain.setTargetAtTime(VOL,w+b.duration,.12)}}));
+  logoBus=a.createGain();logoBus.gain.value=muted?0:1;logoBus.connect(lim);SDBSoundLogo.play(a,logoBus,t0+LOGO_T);
+}
+function tick(ts){
+  if(playing){
+    if(AC&&bus&&AC.state==='running')t=Math.min(TOTAL-0.001,Math.max(0,AC.currentTime-t0));
+    else{if(last!=null)t=Math.min(TOTAL-0.001,t+(ts-last)/1000);last=ts}
+    if(t>=TOTAL-0.001)playing=false;
+  }else last=null;
+  render();requestAnimationFrame(tick);
+}
+async function restart(){$('start').hidden=true;cur=-1;t=0;last=null;try{await startAudio()}catch(e){}playing=true;cur=-1}
+function togglePause(){if(!AC){playing=!playing;return}if(playing){playing=false;AC.suspend()}else{AC.resume();playing=true}}
+$('go').onclick=restart;
+addEventListener('keydown',e=>{
+  if(e.key===' '){e.preventDefault();if($('start').hidden)togglePause();else restart()}
+  else if(e.key==='r'||e.key==='R')restart();
+  else if(e.key==='z'||e.key==='Z')$('safeguide').hidden=!$('safeguide').hidden;
+  else if(e.key==='v'||e.key==='V'){voOff=!voOff;if(voBus)voBus.gain.setTargetAtTime(voOff||muted?0:1.15,ctx().currentTime,.03)}
+  else if(e.key==='m'||e.key==='M'){muted=!muted;const a=ctx();if(bus)bus.gain.setTargetAtTime(muted?0:VOL,a.currentTime,.03);if(voBus)voBus.gain.setTargetAtTime(muted||voOff?0:1.15,a.currentTime,.03);if(logoBus)logoBus.gain.setTargetAtTime(muted?0:1,a.currentTime,.03)}
+  else if(e.key==='f'||e.key==='F'){(document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.())?.catch?.(()=>{})}
+});
+/* frame check: seek(12.3) or #north&t=12.3 shows that second, paused */
+function seek(s){$('start').hidden=true;playing=false;t=s;cur=-1;render()}
+if(H.has('t'))seek(+H.get('t'));
+window.seek=seek;window.applyVariant=applyVariant;
+render();requestAnimationFrame(tick);
+</script>
