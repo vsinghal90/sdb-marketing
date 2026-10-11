@@ -1,0 +1,612 @@
+<meta charset="utf-8">
+<title>Mere Paas Tawa Hai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&display=swap">
+<style>
+/* Bollywood parody reel (30s, 9:16). "Mere paas maa hai" spoof: a paratha cooked from frozen shows off, the ghar jaisa paratha answers "Mere paas garam tawa hai".
+   All text and characters live inside .box, which IS the platform safe zone (top 14%, bottom 28%, 12% each side),
+   so nothing can be covered by Reels / Shorts / TikTok buttons. Units inside .box: 1cqw = 1% of the safe zone's width (its height is about 135.7cqw). */
+:root{
+  --navy:#123524; --navy-hi:#1e5038; --navy-lo:#0a1f15;   /* phthalo green, the brand reel background */
+  --ink:#fff; --ink-soft:rgba(255,255,255,.75);
+  --red:#ea4335; --green:#34a853; --saffron:#fbbc05; --ice:#9fd2f2;
+  --f-title:Georgia,"Times New Roman",serif;
+  --f-sub:"Playfair Display",Georgia,serif;
+  --f-body:"Trebuchet MS","Lucida Grande","Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:#0d0b0a;display:grid;place-items:center;overflow:hidden;font-family:var(--f-body);color:var(--ink)}
+.stage{position:relative;height:min(100%,calc(100vw * 16 / 9));aspect-ratio:9/16;max-width:100%;overflow:hidden;background:radial-gradient(120% 85% at 50% 40%,var(--navy-hi) 0%,var(--navy) 55%,var(--navy-lo) 100%)}
+/* cinema dressing: spotlight, vignette, film grain, letterbox bars (decoration only, outside the safe zone is fine) */
+.spot{position:absolute;inset:0;background:radial-gradient(55% 30% at 50% 55%,rgba(255,226,160,.10),transparent 70%);transition:background .6s}
+.stage[data-cast="pclose"] .spot,.stage[data-cast^="punch"] .spot{background:radial-gradient(45% 28% at 50% 58%,rgba(255,190,90,.30),transparent 70%)}
+/* spotlight shift (owner, 2026-10-11): once the hero has said his line, and through the melt, the lamp lights him, not the frozen one */
+.beamL,.beamR{transition:opacity .35s}.beamR{opacity:0}
+.stage[data-cast="punch2"] .beamL,.stage[data-cast="melt"] .beamL{opacity:0}
+.stage[data-cast="punch2"] .beamR,.stage[data-cast="melt"] .beamR{opacity:1}
+.stage[data-cast="punch2"] .spot,.stage[data-cast="melt"] .spot{background:radial-gradient(30% 26% at 72% 56%,rgba(255,210,120,.42),transparent 70%)}
+.stage[data-cast="melt"] .frozen{filter:brightness(.72)}
+.setbg{position:absolute;inset:0;width:100%;height:100%;transition:opacity .35s}
+.stage[data-cast="gone"] .setbg{filter:brightness(.55) blur(.3cqw)}   /* the end card stays on the bridge set (owner, 2026-10-10), dimmed so the brand reads */
+.setbg{transition:filter .4s}
+/* wide establishing shot (owner, 2026-10-11): the whole flyover from the side, both brothers small under the span, slow push-in */
+.widebg{position:absolute;inset:0;width:100%;height:100%;opacity:0;transform-origin:50% 62%}
+.stage[data-cast="wide"] .widebg{opacity:1;animation:widepush 2.6s linear both}
+.stage[data-cast="wide"] .setbg{opacity:0}
+@keyframes widepush{from{transform:scale(1)}to{transform:scale(1.05)}}
+.stage[data-cast="wide"] .cast{transform:scale(.6);animation:widecast 2.6s linear both}
+@keyframes widecast{from{transform:scale(.58)}to{transform:scale(.62)}}
+.scene[data-s="0"] .txt{display:grid;align-items:start}.scene[data-s="0"] .txt>*{grid-area:1/1}.scene[data-s="0"] .kicker{font-size:5.6cqw;margin-top:8cqw}   /* "Wait for the reply" takes the hook line's place once it drops at the slam-in */
+.line,.h1,.en,.kicker{text-shadow:0 .4cqw 1.4cqw rgba(0,0,0,.6)}
+.vig{position:absolute;inset:0;box-shadow:inset 0 0 22vh 6vh rgba(0,0,0,.55);pointer-events:none}
+.grain{position:absolute;inset:-50%;opacity:.07;pointer-events:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");animation:grain .5s steps(4) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
+.lb{position:absolute;left:0;right:0;height:6.5%;background:#000;z-index:4}.lb.t{top:0}.lb.b{bottom:0}
+
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:8}
+.flash.go{animation:flash .35s ease-out}
+@keyframes flash{from{opacity:.85}to{opacity:0}}
+.box.shake{animation:shake .35s linear}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-1.6%,.8%) rotate(-.6deg)}40%{transform:translate(1.4%,-1%) rotate(.5deg)}60%{transform:translate(-1%,1%)}80%{transform:translate(.8%,-.6%)}}
+/* the safe zone box: everything that matters is inside it */
+.box{position:absolute;left:12%;top:14%;width:76%;height:58%;container-type:size;z-index:3}
+
+/* scenes (text) */
+.scene{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.scene.on{opacity:1;visibility:visible}
+.txt{position:absolute;left:0;right:0;top:15cqw;display:grid;justify-items:center;text-align:center;gap:2.6cqw}
+.kicker{font-weight:700;font-size:4.6cqw;letter-spacing:.2em;text-transform:uppercase;color:var(--saffron)}
+.who{font-weight:700;font-size:4.2cqw;letter-spacing:.16em;text-transform:uppercase;padding:1.2cqw 3.4cqw;border-radius:99px}
+.who.fz{background:#1f4f8a;color:#dff1ff}.who.pa{background:var(--saffron);color:#2a1d0c}
+.h1{font-family:var(--f-title);font-weight:700;font-size:9.6cqw;line-height:1.08;letter-spacing:-.01em}
+.line{font-family:var(--f-sub);font-style:italic;font-weight:600;font-size:8.2cqw;line-height:1.1;white-space:nowrap}
+.line.big{font-size:11cqw;white-space:normal}
+.ice{color:#bfe6ff}.sf{color:var(--saffron)}
+.en{font-size:4.2cqw;max-width:92cqw;color:var(--ink-soft);line-height:1.35}
+.aside{font-family:var(--f-sub);font-style:italic;font-size:6.4cqw;color:var(--ink-soft)}
+[data-at]{opacity:0;transform:translateY(3cqw) scale(.96);transition:opacity .35s ease,transform .45s cubic-bezier(.2,1.3,.35,1)}
+[data-at].show{opacity:1;transform:none}
+.cap{position:absolute;left:0;right:0;top:0;white-space:normal}.cap[data-at]{transition:opacity .12s,transform .25s cubic-bezier(.3,1.5,.5,1)}
+.slam[data-at]{transform:scale(1.9)}.slam[data-at].show{transform:none;transition:opacity .12s,transform .28s cubic-bezier(.3,1.5,.5,1)}
+
+/* cast: the two characters, shared by scenes 1 to 6; stage[data-cast] sets their pose */
+.cast{position:absolute;inset:0;transition:opacity .4s}
+.char{position:absolute}
+.frozen{left:16.75cqw;top:58.8cqw;width:22.5cqw;aspect-ratio:1;transform-origin:50% 100%}
+.fz-body{position:absolute;inset:0;transform-origin:50% 325%}
+/* costumes: nods to the two brothers of the famous bridge scene. Costume and hairstyle only, never an actor's face, name or voice (personality rights). */
+.costume{position:absolute;left:0;width:100%;top:-30%;height:165%;overflow:visible;pointer-events:none}
+.costume.full{height:360%}
+.frozen img{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 2.4cqw 3cqw rgba(0,0,0,.45))}
+.frozen .face{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+/* labels under each paratha */
+.tag{position:absolute;z-index:4;left:50%;top:124%;transform:translateX(-50%);white-space:nowrap;font-weight:700;font-size:2.3cqw;letter-spacing:.04em;text-transform:uppercase;padding:.6cqw 1.5cqw;border-radius:99px;transition:opacity .3s}
+.tag.fz{background:#cfe9ff;color:#173a63}.tag.pa{background:var(--saffron);color:#2a1d0c}
+.stage[data-cast^="punch"] .tag,.stage[data-cast="pclose"] .tag{opacity:0}
+.para{left:62.6cqw;top:70.9cqw;width:18.8cqw;aspect-ratio:1}
+.para img{position:absolute;inset:0;width:100%;height:100%;filter:saturate(1.12) brightness(1.04) contrast(1.04) drop-shadow(0 0 1.1cqw rgba(255,200,110,.45)) drop-shadow(0 2.4cqw 3cqw rgba(0,0,0,.4))}
+.para img{transform:rotate(160deg)}   /* butter sits on the cheek, clear of the eyes */
+.para .shade{background:radial-gradient(circle at 32% 26%,rgba(255,244,200,.38),transparent 40%),radial-gradient(circle at 72% 82%,rgba(0,0,0,.18),transparent 62%)}
+.para .face{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+/* full figures: the elder brother is clearly taller (head 22.5cqw), the younger one about 17% shorter (head 18.8cqw), echoing the two brothers (owner, 2026-10-11); both stand on a floor at 132cqw.
+   close-ups scale the figure so the head is about 50cqw and the legs leave the frame.
+   gaze: viewers of vertical video look at the centre band (about 25-60% of the frame height), so captions sit at 23-45% and faces at 45-60%.
+   shots. frozen centre is x25.5, paratha centre x74.5, both y96.5, so ±24.5cqw centres one of them */
+.stage[data-cast="two"] .cast{animation:punchin .3s cubic-bezier(.2,.9,.3,1) both}
+.cast{transform-origin:50% 72%}
+.stage[data-cast="z2"] .cast{transform:scale(1.06)}.stage[data-cast="z3"] .cast{transform:scale(1.12)}
+@keyframes punchin{from{transform:scale(1.35)}to{transform:none}}
+/* every shot keeps both brothers head to toe (owner, 2026-10-10): the camera only leans toward whoever speaks, the listener dims a little */
+.cast{transform-origin:50% 97.3%}
+.stage[data-cast="fclose"] .cast,.stage[data-cast="fask"] .cast{transform:translateX(4cqw) scale(1.22)}
+.stage[data-cast="preact"] .cast,.stage[data-cast^="punch"] .cast{transform:translateX(-4cqw) scale(1.22)}
+.stage[data-cast="pclose"] .cast{animation:push 2s ease-out both}
+@keyframes push{from{transform:translateX(-4cqw) scale(1.18)}to{transform:translateX(-4cqw) scale(1.26)}}
+.stage[data-cast="preact"] .frozen,.stage[data-cast="pclose"] .frozen,.stage[data-cast^="punch"] .frozen{filter:brightness(.72)}
+.char{transition:filter .2s}
+.stage[data-cast="melt"] .para{transform:rotate(-4deg)}
+.stage[data-cast="gone"] .cast{opacity:0}
+
+/* 3D look: discs with thickness and lamp-lit shading, cylinder-shaded clothes, ground shadows, breathing, and arm gestures per shot */
+.thick{position:absolute;inset:0;border-radius:50%;background:#6e4320;transform:translate(1.5%,4.5%)}.thick.fzt{background:#8d979d}
+.shade{position:absolute;inset:0;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 30% 26%,rgba(255,236,190,.30),transparent 38%),radial-gradient(circle at 72% 80%,rgba(0,0,0,.42),transparent 62%)}
+.torso{transform-box:view-box;transform-origin:50px 206px;animation:breathe 2.4s ease-in-out infinite alternate}
+@keyframes breathe{to{transform:scale(1.012,1.022)}}
+.armL{transform-box:view-box;transform-origin:4px 112px;transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
+.armR{transform-box:view-box;transform-origin:96px 112px;transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
+/* elder brother: hands in pockets, then counts his riches, points on the question, throws his arms up as he melts */
+.frozen .hand{opacity:0}
+.stage[data-cast="fclose"] .frozen .hand,.stage[data-cast="fask"] .frozen .hand,.stage[data-cast="melt"] .frozen .hand{opacity:1}
+.stage[data-cast="fclose"] .frozen .armR{animation:vCount .6s ease-in-out infinite}
+@keyframes vCount{0%,100%{transform:rotate(-62deg)}50%{transform:rotate(-98deg)}}
+.stage[data-cast="fclose"] .frozen .armL{transform:rotate(10deg)}
+.stage[data-cast="fask"] .frozen .armR{transform:rotate(-82deg)}
+.stage[data-cast="melt"] .frozen .armL{transform:rotate(150deg)}.stage[data-cast="melt"] .frozen .armR{transform:rotate(-150deg)}
+/* younger brother: arms pulled in while intimidated, hand on chest for "Mere paas", fist raised for "garam tawa hai", hands on hips after */
+.stage[data-cast="punch"] .para .armR{transform:rotate(38deg)}
+.stage[data-cast="punch2"] .para .armR{transform:rotate(-140deg)}.stage[data-cast="punch2"] .para .armL{transform:rotate(22deg)}
+.stage[data-cast="melt"] .para .armL{transform:rotate(24deg)}.stage[data-cast="melt"] .para .armR{transform:rotate(-24deg)}
+/* frozen meal face and melt */
+.fz-talk,.fz-o,.sweat,.puddle{opacity:0;transition:opacity .2s}
+.stage[data-cast="fclose"] .fz-smirk,.stage[data-cast="fask"] .fz-smirk{opacity:0}
+.stage[data-cast="fclose"] .fz-talk,.stage[data-cast="fask"] .fz-talk{opacity:1}
+.fz-talk{transform-box:fill-box;transform-origin:50% 50%}
+.stage.talkF .fz-talk{animation:talk .22s ease-in-out infinite alternate}
+@keyframes talk{from{transform:scaleY(.25)}to{transform:scaleY(1.1)}}
+.spark{transform-box:fill-box;transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(.3);opacity:.2}50%{transform:scale(1);opacity:1}}
+.stage[data-cast="melt"] .fz-body{animation:melt 2.6s .3s cubic-bezier(.5,0,.6,1) both}
+@keyframes melt{0%{transform:none}25%{transform:scale(1.03,.97) skewX(2deg)}100%{transform:scale(1.15,.35) skewX(-4deg)}}
+.stage[data-cast="melt"] .fz-smirk,.stage[data-cast="melt"] .shades,.stage[data-cast="melt"] .tag.fz{opacity:0}
+.stage[data-cast="melt"] .fz-o,.stage[data-cast="melt"] .sweat,.stage[data-cast="melt"] .puddle{opacity:1}
+.shades{transition:opacity .2s}
+/* face cuts (owner, 2026-10-10): elder brother a long face with a tall forehead and a narrowing chin; younger brother a broader, rounder face with full cheeks. Shape nods only, never an actor's likeness */
+.frozen .thick,.frozen img,.frozen .shade{inset:auto;left:6%;width:88%;top:-8%;height:118%;border-radius:48% 48% 42% 42%/36% 36% 64% 64%}
+.para .thick,.para img,.para .shade{inset:auto;left:-3%;width:106%;top:1%;height:99%;border-radius:50% 50% 47% 47%/45% 45% 55% 55%}
+
+.puddle{position:absolute;left:-30%;right:-30%;top:312%;height:22%;border-radius:50%;background:radial-gradient(closest-side,rgba(190,228,250,.9),rgba(159,210,242,.55) 70%,transparent)}
+.stage[data-cast="melt"] .puddle{animation:pud 2.8s .3s ease-out both}
+@keyframes pud{from{transform:scale(.3,.6)}to{transform:scale(1.15,1)}}
+.drip{transform-box:fill-box;opacity:0}
+.stage[data-cast="melt"] .drip{animation:drip 1s ease-in infinite}
+.stage[data-cast="melt"] .drip.b{animation-delay:.45s}
+@keyframes drip{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(14px);opacity:0}}
+
+/* paratha face */
+.pf-talk,.pf-smug,.pf-flat{opacity:0;transition:opacity .2s}
+.brow{transform-box:fill-box;transform-origin:50% 50%;transition:transform .3s}
+/* hero in every frame (owner, 2026-10-11): while the frozen one boasts, the ghar jaisa paratha stays composed, one brow up, steady gaze, firm mouth */
+.stage[data-cast="preact"] .pf-smile,.stage[data-cast="pclose"] .pf-smile{opacity:0}
+.stage[data-cast="preact"] .pf-flat,.stage[data-cast="pclose"] .pf-flat{opacity:1}
+.stage[data-cast="preact"] .brow.r,.stage[data-cast="pclose"] .brow.r{transform:translateY(-1.5px) rotate(-6deg)}
+.stage[data-cast="preact"] .brow.l,.stage[data-cast="pclose"] .brow.l{transform:rotate(8deg) translateY(1px)}
+.pupil{transform-box:fill-box;transform-origin:50% 50%;transition:transform .15s}
+.stage[data-cast^="punch"] .pf-smile{opacity:0}.stage[data-cast^="punch"] .pf-talk{opacity:1}
+.stage[data-cast^="punch"] .brow.l{transform:rotate(14deg) translateY(2px)}.stage[data-cast^="punch"] .brow.r{transform:rotate(-14deg) translateY(2px)}
+.pf-talk{transform-box:fill-box;transform-origin:50% 50%}
+.stage.talkP .pf-talk{animation:talk .2s ease-in-out infinite alternate}
+.stage[data-cast="melt"] .pf-smile{opacity:0}.stage[data-cast="melt"] .pf-smug{opacity:1}
+
+@keyframes shades{from{transform:translateY(-70px)}to{transform:none}}
+/* hero tawa insert (owner, 2026-10-11): the garam tawa is the winner, so it gets its own eye-catching shot in the centre band */
+.hero{position:absolute;left:0;top:44cqw;width:100cqw;height:80cqw;opacity:0;pointer-events:none;z-index:2}
+.stage[data-cast="tawa"] .hero{opacity:1;animation:heroin .35s cubic-bezier(.2,1.4,.4,1) both}
+.stage[data-cast="tawa"] .cast{opacity:0;transition:none}
+@keyframes heroin{from{transform:scale(1.5)}to{transform:none}}
+.hrays{position:absolute;left:-40cqw;top:-40cqw;width:180cqw;height:180cqw;background:repeating-conic-gradient(from 0deg,rgba(255,190,80,.16) 0 8deg,transparent 8deg 20deg);-webkit-mask:radial-gradient(closest-side,#000 30%,transparent);mask:radial-gradient(closest-side,#000 30%,transparent)}
+.stage[data-cast="tawa"] .hrays{animation:spin 9s linear infinite}
+.hstove{position:absolute;left:4cqw;top:22cqw;width:92cqw;height:auto;overflow:visible}
+.hpar{position:absolute;left:21cqw;top:28.5cqw;width:56cqw;height:24cqw;border-radius:50%;filter:drop-shadow(0 1cqw 1cqw rgba(0,0,0,.6)) saturate(1.15) brightness(1.08)}
+.stage[data-cast="tawa"] .hpar{animation:cook 1.8s ease-in-out both}
+@keyframes cook{0%{transform:rotate(-6deg) scale(.96)}100%{transform:rotate(4deg) scale(1)}}
+.hshine{position:absolute;left:40cqw;top:33cqw;width:18cqw;height:9cqw;border-radius:50%;background:radial-gradient(closest-side,rgba(255,240,170,.85),rgba(255,200,80,.25) 60%,transparent);mix-blend-mode:screen;animation:shine .7s ease-in-out infinite alternate}
+@keyframes shine{from{opacity:.45;transform:scale(.9)}to{opacity:1;transform:scale(1.12)}}
+.hsteam{position:absolute;left:18cqw;top:-14cqw;width:62cqw;height:50cqw}
+.hsteam i{position:absolute;bottom:0;width:15cqw;height:38cqw;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.95),rgba(255,255,255,.35) 55%,transparent);filter:blur(.7cqw);animation:hsteam 1.5s ease-out infinite}
+.hsteam i:nth-child(1){left:2%}.hsteam i:nth-child(2){left:18%;animation-delay:.25s}.hsteam i:nth-child(3){left:36%;animation-delay:.5s}.hsteam i:nth-child(4){left:52%;animation-delay:.15s}.hsteam i:nth-child(5){left:68%;animation-delay:.65s}.hsteam i:nth-child(6){left:82%;animation-delay:.4s}
+@keyframes hsteam{0%{transform:translateY(30%) scaleX(.5);opacity:0}25%{opacity:1}100%{transform:translateY(-55%) scaleX(1.5) rotate(8deg);opacity:0}}
+.hbub{position:absolute;left:22cqw;top:29cqw;width:54cqw;height:22cqw}
+.hbub i{position:absolute;width:1.4cqw;height:1.4cqw;border-radius:50%;background:#fff6c8;animation:pop .5s ease-out infinite}
+.hbub i:nth-child(1){left:6%;top:50%}.hbub i:nth-child(2){left:30%;top:8%;animation-delay:.2s}.hbub i:nth-child(3){left:62%;top:4%;animation-delay:.35s}.hbub i:nth-child(4){left:92%;top:46%;animation-delay:.1s}.hbub i:nth-child(5){left:48%;top:92%;animation-delay:.28s}
+@keyframes pop{0%{transform:scale(.2);opacity:1}100%{transform:scale(1.6) translateY(-2cqw);opacity:0}}
+.stage:not([data-cast="tawa"]) .hero *{animation-play-state:paused}
+/* tawa, flames and steam under the paratha in the punchline */
+.tawa{position:absolute;left:-16%;right:-16%;top:112%;height:34%;opacity:0;transition:opacity .4s;z-index:3}
+.tawa svg{width:100%;height:100%;overflow:visible}
+
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick .18s ease-in-out infinite alternate}
+.flame:nth-child(2n){animation-duration:.23s}.flame:nth-child(3n){animation-duration:.15s}
+@keyframes flick{from{transform:scaleY(.8) skewX(-4deg)}to{transform:scaleY(1.12) skewX(4deg)}}
+.rays{position:absolute;left:-60%;top:-60%;width:220%;height:220%;opacity:0;transition:opacity .2s;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,rgba(251,188,5,.34) 0deg 9deg,transparent 9deg 22deg);-webkit-mask:radial-gradient(closest-side,#000 25%,transparent 100%);mask:radial-gradient(closest-side,#000 25%,transparent 100%)}
+.stage[data-cast^="punch"] .rays{opacity:1;animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.steam{position:absolute;left:0;right:0;top:-62%;height:40%;opacity:0;transition:opacity .4s}
+.stage[data-cast^="punch"] .steam{opacity:1}
+.steam i{position:absolute;bottom:0;width:7%;height:70%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.55),transparent);filter:blur(2px);animation:steam 1.6s ease-out infinite}
+.steam i:nth-child(1){left:28%}.steam i:nth-child(2){left:48%;animation-delay:.5s}.steam i:nth-child(3){left:66%;animation-delay:1s}
+@keyframes steam{0%{transform:translateY(20%) scaleX(.6);opacity:0}30%{opacity:1}100%{transform:translateY(-60%) scaleX(1.4);opacity:0}}
+
+/* offer */
+.offer .photo{display:block;width:auto;max-width:84cqw;max-height:56cqw;margin:0 auto;filter:drop-shadow(0 2.4cqw 3.4cqw rgba(0,0,0,.45))}
+.brandname{font-family:var(--f-title);font-weight:700;font-size:10.6cqw;line-height:1;white-space:nowrap;letter-spacing:-.01em}
+.bn-g{color:#5cc77e}.bn-r{color:#ff6b5c}.bn-s{color:var(--saffron)}
+.claim{display:flex;align-items:center;gap:2.4cqw;font-weight:700;font-size:5cqw;white-space:nowrap}
+.claim i{flex:none;width:4.6cqw;height:4.6cqw;border-radius:50%;background:var(--green);position:relative}
+.claim i::after{content:"";position:absolute;left:1.55cqw;top:.7cqw;width:1.3cqw;height:2.3cqw;border:solid #fff;border-width:0 .6cqw .6cqw 0;transform:rotate(45deg)}
+.pricing{display:grid;gap:1.6cqw;justify-items:center}
+.pricing .p1{font-family:var(--f-sub);font-style:italic;font-weight:600;font-size:7.2cqw}
+.pricing .p1 b,.pricing .p2 b{font-family:var(--f-title);font-style:normal;color:var(--saffron)}
+.pricing .p2{font-size:5cqw;color:var(--ink-soft);font-weight:700}
+.pricing .p2 b{font-size:5.6cqw}
+
+/* end card */
+.lockup{width:94cqw}.lockup img{display:block;width:100%;height:auto;filter:drop-shadow(0 1.4cqw 3cqw rgba(4,10,22,.35))}
+/* closing, in order of appearance and top to bottom: the promise, the brand (lands on the Bites note of the sound logo), then a quiet "available on" */
+.promise{font-family:var(--f-sub);font-style:italic;font-weight:700;font-size:7.4cqw;line-height:1.18;text-align:center;white-space:nowrap}
+.avail{display:grid;gap:2cqw;justify-items:center;margin-top:4cqw}
+.avail>span,.avail .logos{opacity:.8}   /* dim the children: an opacity on .avail itself would override its delayed reveal */
+.avail>span{font-size:3.4cqw;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.logos.small .logo-chip{height:7cqw;padding:0 2.2cqw;border-radius:1.8cqw}.logos.small .logo-chip img{height:4cqw}
+.logos.small .logo-chip.ownly{padding:0}.logos.small .logo-chip.ownly img{height:7cqw}.logos.small .zomato{font-size:3.8cqw}
+.logos{display:flex;gap:2cqw;justify-content:center;align-items:center}
+.logo-chip{overflow:hidden;height:10cqw;padding:0 3cqw;border-radius:2.6cqw;background:#fff;display:flex;align-items:center;justify-content:center}
+.logo-chip img{height:5.8cqw;width:auto;display:block}
+.logo-chip.ownly{background:#ff4b82;padding:0}.logo-chip.ownly img{height:10cqw}
+.zomato{font-weight:700;font-style:italic;font-size:5.4cqw;color:#e23744;letter-spacing:-.02em}
+.rule{width:14cqw;height:.9cqw;border-radius:1cqw;background:var(--red)}
+
+.safe{position:absolute;left:12%;top:14%;width:76%;height:58%;z-index:9;border:2px dashed rgba(255,80,80,.9);pointer-events:none;box-shadow:0 0 0 999px rgba(255,0,0,.12)}
+/* start screen */
+.start{position:absolute;inset:0;z-index:10;display:grid;place-items:center;align-content:center;gap:5vh;background:rgba(13,11,10,.84);text-align:center;padding:0 8%}
+.go{display:grid;gap:3vh;background:none;border:0;color:#fff;cursor:pointer;font:inherit}
+.go b{font-size:2.6vh;letter-spacing:.06em;background:var(--red);padding:1.8vh 5vh;border-radius:999px;justify-self:center}
+.go span{font-size:1.7vh;opacity:.8;line-height:1.7}
+.go:focus-visible{outline:3px solid var(--saffron);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.grain,.flame,.steam i,.spark{animation:none!important}}
+</style>
+
+<div class="stage" id="stage" data-cast="out">
+  <!-- the film's setting: a dark street corner under a bridge at night, lit by one street lamp (decoration; all key content stays in .box) -->
+  <svg class="widebg" viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="wsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a1230"/><stop offset=".55" stop-color="#1c2a58"/><stop offset="1" stop-color="#3a3560"/></linearGradient>
+      <linearGradient id="wdeck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a6f7c"/><stop offset="1" stop-color="#3a3d47"/></linearGradient>
+      <linearGradient id="wpil" x1="0" x2="1"><stop offset="0" stop-color="#22252d"/><stop offset=".4" stop-color="#565b68"/><stop offset="1" stop-color="#1a1c22"/></linearGradient>
+      <radialGradient id="wlamp" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffd27a" stop-opacity=".9"/><stop offset="1" stop-color="#ffb648" stop-opacity="0"/></radialGradient>
+      <radialGradient id="wmoon" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6dc" stop-opacity=".5"/><stop offset="1" stop-color="#fff6dc" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="1080" height="1920" fill="url(#wsky)"/>
+    <circle cx="760" cy="960" r="110" fill="url(#wmoon)"/><circle cx="760" cy="960" r="28" fill="#f6ecd0"/>
+    <!-- far skyline -->
+    <path d="M0 1352 V1040 h70 v-50 h60 v80 h50 V960 h80 v110 h40 v-40 h70 v-90 h90 v140 h50 v-60 h70 v110 h40 V990 h80 v90 h60 v-40 h70 v-70 h80 v130 h50 V1352 Z" fill="#141a33"/>
+    <g fill="#ffcf73" opacity=".55"><rect x="200" y="1000" width="8" height="11"/><rect x="230" y="1050" width="8" height="11"/><rect x="420" y="990" width="8" height="11"/><rect x="560" y="1060" width="8" height="11"/><rect x="720" y="1030" width="8" height="11"/><rect x="860" y="1000" width="8" height="11"/><rect x="960" y="1080" width="8" height="11"/><rect x="110" y="1080" width="8" height="11"/></g>
+    <!-- the flyover from the side: deck with railing and lamps, three round pillars, arched spans -->
+    <g fill="#ffd27a"><circle cx="150" cy="640" r="70" fill="url(#wlamp)"/><circle cx="540" cy="640" r="70" fill="url(#wlamp)"/><circle cx="930" cy="640" r="70" fill="url(#wlamp)"/></g>
+    <path d="M150 640 V720 M540 640 V720 M930 640 V720" stroke="#2c2f36" stroke-width="7"/>
+    <g fill="#ffe2a0"><circle cx="150" cy="640" r="9"/><circle cx="540" cy="640" r="9"/><circle cx="930" cy="640" r="9"/></g>
+    <path d="M0 700 H1080" stroke="#4a4e59" stroke-width="6"/>
+    <g stroke="#3a3e48" stroke-width="5"><path d="M30 700 v26 M90 700 v26 M150 700 v26 M210 700 v26 M270 700 v26 M330 700 v26 M390 700 v26 M450 700 v26 M510 700 v26 M570 700 v26 M630 700 v26 M690 700 v26 M750 700 v26 M810 700 v26 M870 700 v26 M930 700 v26 M990 700 v26 M1050 700 v26"/></g>
+    <path d="M0 726 H1080 V800 H0 Z" fill="url(#wdeck)"/>
+    <path d="M0 726 H1080" stroke="#8a8f9c" stroke-width="4"/>
+    <path d="M0 800 H1080 V830 H0 Z" fill="#23262e"/>
+    <!-- arches under the deck between the pillars -->
+    <path d="M-60 830 H1140 V880 H1010 C960 880 930 900 920 940 V1352 H880 V960 C860 880 220 880 200 960 V1352 H160 V940 C150 900 120 880 70 880 H-60 Z" fill="#2c2f38"/>
+    <rect x="-20" y="900" width="120" height="452" fill="url(#wpil)"/>
+    <rect x="160" y="930" width="60" height="422" fill="url(#wpil)"/>
+    <rect x="860" y="930" width="60" height="422" fill="url(#wpil)"/>
+    <rect x="980" y="900" width="120" height="452" fill="url(#wpil)"/>
+    <!-- road and the lamp under the span -->
+    <path d="M0 1352 H1080 V1920 H0 Z" fill="#141519"/>
+    <path d="M0 1348 H1080 V1362 H0 Z" fill="#3c3f48"/>
+    <path d="M220 1000 h26 v8 h-26z" fill="#2c2f36"/><path d="M246 1004 C290 1000 310 1010 322 1030" stroke="#2c2f36" stroke-width="7" fill="none"/>
+    <circle cx="322" cy="1046" r="150" fill="url(#wlamp)" opacity=".7"/>
+    <path d="M306 1040 L338 1040 L640 1352 L60 1352 Z" fill="#ffcf73" opacity=".12"/>
+    <ellipse cx="360" cy="1356" rx="320" ry="40" fill="#ffcf73" opacity=".12"/>
+    <g transform="translate(640 1238) scale(.75)"><path d="M0 120 C0 90 20 80 60 74 L110 30 C130 14 250 14 280 30 L330 74 C380 80 410 92 410 120 V150 H0 Z" fill="#3b1218"/><path d="M120 38 L100 74 H200 V36 Z M214 36 V74 H316 L276 38 Z" fill="#141a2b" opacity=".9"/><circle cx="80" cy="150" r="30" fill="#0a0a0c"/><circle cx="330" cy="150" r="30" fill="#0a0a0c"/></g>
+  </svg>
+  <svg class="setbg" viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <!-- night under a city flyover: deck overhead, two round pillars at the sides, open skyline and moon between them, lamp on the left -->
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a1230"/><stop offset=".6" stop-color="#1c2a58"/><stop offset="1" stop-color="#3a3560"/></linearGradient>
+      <linearGradient id="road" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22232a"/><stop offset="1" stop-color="#0b0b0e"/></linearGradient>
+      <linearGradient id="pil" x1="0" x2="1"><stop offset="0" stop-color="#1c1f26"/><stop offset=".35" stop-color="#4a4f5c"/><stop offset=".6" stop-color="#3a3e49"/><stop offset="1" stop-color="#15171c"/></linearGradient>
+      <linearGradient id="under" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d0f14"/><stop offset="1" stop-color="#232733"/></linearGradient>
+      <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a5f6c"/><stop offset="1" stop-color="#32353f"/></linearGradient>
+      <radialGradient id="moon" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6dc" stop-opacity=".55"/><stop offset="1" stop-color="#fff6dc" stop-opacity="0"/></radialGradient>
+      <radialGradient id="lampglow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffd27a" stop-opacity=".95"/><stop offset=".25" stop-color="#ffb648" stop-opacity=".45"/><stop offset="1" stop-color="#ffb648" stop-opacity="0"/></radialGradient>
+      <linearGradient id="cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffcf73" stop-opacity=".30"/><stop offset="1" stop-color="#ffcf73" stop-opacity=".04"/></linearGradient>
+      <radialGradient id="pool" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffcf73" stop-opacity=".30"/><stop offset="1" stop-color="#ffcf73" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="1080" height="1920" fill="url(#sky)"/>
+    <circle cx="868" cy="800" r="150" fill="url(#moon)"/><circle cx="868" cy="800" r="36" fill="#f6ecd0"/>
+    <!-- skyline seen between the pillars -->
+    <path d="M140 1330 V1080 h60 v-60 h50 v90 h40 V960 h70 v120 h40 v-40 h60 v-110 h80 v150 h50 v-70 h60 v120 h40 V990 h70 v100 h50 v-50 h60 V1330 Z" fill="#141a33"/>
+    <path d="M140 1330 V1160 h90 v-40 h70 v60 h80 v-30 h90 v50 h70 v-70 h80 v40 h90 v-30 h80 v60 h70 V1330 Z" fill="#0e1326"/>
+    <g fill="#ffcf73" opacity=".6"><rect x="270" y="1000" width="9" height="12"/><rect x="300" y="1050" width="9" height="12"/><rect x="420" y="980" width="9" height="12"/><rect x="450" y="1030" width="9" height="12"/><rect x="560" y="1050" width="9" height="12"/><rect x="700" y="1020" width="9" height="12"/><rect x="730" y="1070" width="9" height="12"/><rect x="820" y="1100" width="9" height="12"/><rect x="360" y="1180" width="9" height="12"/><rect x="620" y="1200" width="9" height="12"/><rect x="880" y="1190" width="9" height="12"/></g>
+    <!-- road -->
+    <path d="M0 1330 H1080 V1920 H0 Z" fill="url(#road)"/>
+    <path d="M0 1326 H1080 V1342 H0 Z" fill="#3c3f48"/>
+    <ellipse cx="320" cy="1600" rx="80" ry="280" fill="#ffcf73" opacity=".09"/><ellipse cx="868" cy="1560" rx="34" ry="200" fill="#fff6dc" opacity=".05"/>
+    <!-- flyover deck overhead: dark underside, lit front edge, railing -->
+    <path d="M0 0 H1080 V430 H0 Z" fill="url(#under)"/>
+    <path d="M0 330 H1080 V430 H0 Z" fill="url(#edge)"/>
+    <path d="M0 330 H1080" stroke="#7a7f8c" stroke-width="5"/><path d="M0 430 H1080" stroke="#14161b" stroke-width="10"/>
+    <path d="M0 250 H1080 V330 H0 Z" fill="#191c24"/>
+    <g fill="#20232b"><rect x="0" y="230" width="1080" height="10"/><rect x="40" y="240" width="12" height="90"/><rect x="200" y="240" width="12" height="90"/><rect x="360" y="240" width="12" height="90"/><rect x="520" y="240" width="12" height="90"/><rect x="680" y="240" width="12" height="90"/><rect x="840" y="240" width="12" height="90"/><rect x="1000" y="240" width="12" height="90"/></g>
+    <!-- two round pillars with pier caps -->
+    <path d="M0 430 H190 L170 490 H0 Z M1080 430 H890 L910 490 H1080 Z" fill="#2a2d36"/>
+    <rect x="0" y="490" width="150" height="840" fill="url(#pil)"/>
+    <rect x="930" y="490" width="150" height="840" fill="url(#pil)"/>
+    <ellipse cx="75" cy="1330" rx="95" ry="14" fill="#000" opacity=".4"/><ellipse cx="1005" cy="1330" rx="95" ry="14" fill="#000" opacity=".4"/>
+    <!-- 70s car parked at the kerb behind -->
+    <g transform="translate(640 1188)"><path d="M0 120 C0 90 20 80 60 74 L110 30 C130 14 250 14 280 30 L330 74 C380 80 410 92 410 120 V150 H0 Z" fill="#3b1218"/><path d="M120 38 L100 74 H200 V36 Z M214 36 V74 H316 L276 38 Z" fill="#141a2b" opacity=".9"/><circle cx="80" cy="150" r="30" fill="#0a0a0c"/><circle cx="330" cy="150" r="30" fill="#0a0a0c"/><rect x="396" y="104" width="14" height="14" rx="3" fill="#ffe7a8"/></g>
+    <!-- street lamp on the left pillar and its light -->
+    <path d="M150 760 h40 v12 h-40z" fill="#2c2f36"/><path d="M190 766 C260 760 300 770 320 800" stroke="#2c2f36" stroke-width="10" fill="none"/>
+    <path d="M296 796 h48 l-8 22 h-32 z" fill="#4a4d55"/>
+    <circle cx="320" cy="826" r="210" fill="url(#lampglow)"/>
+    <g class="beamL"><path d="M300 820 L340 820 L760 1340 L-60 1340 Z" fill="url(#cone)"/>
+    <ellipse cx="380" cy="1345" rx="460" ry="70" fill="url(#pool)"/></g>
+    <!-- after "garam tawa hai" the lamp swings onto the hero -->
+    <g class="beamR"><path d="M304 816 L344 824 L980 1340 L500 1340 Z" fill="url(#cone)"/><path d="M310 818 L340 822 L900 1340 L570 1340 Z" fill="url(#cone)"/>
+    <ellipse cx="730" cy="1345" rx="300" ry="60" fill="url(#pool)"/><ellipse cx="730" cy="1345" rx="300" ry="60" fill="url(#pool)"/></g>
+  </svg>
+  <div class="spot"></div>
+  <div class="box" id="box">
+    <!-- cast -->
+    <div class="cast">
+      <div class="char frozen">
+        <div class="fz-body">
+          <svg class="costume full" viewBox="0 -30 100 360" aria-hidden="true"><defs><linearGradient id="vSuit" x1="0" x2="1"><stop offset="0" stop-color="#a7adb7"/><stop offset=".45" stop-color="#7e838d"/><stop offset="1" stop-color="#474b53"/></linearGradient><linearGradient id="vSl" x1="0" x2="1"><stop offset="0" stop-color="#959aa3"/><stop offset="1" stop-color="#50545c"/></linearGradient><linearGradient id="vTr" x1="0" x2="1"><stop offset="0" stop-color="#80858e"/><stop offset="1" stop-color="#43474e"/></linearGradient></defs><ellipse cx="50" cy="327" rx="64" ry="9" fill="#000" opacity=".5"/><g class="legs"><path d="M16 200 L48 200 L45 318 L4 318 Z M52 200 L84 200 L96 318 L55 318 Z" fill="url(#vTr)"/><path d="M0 316 h46 v10 q-23 8 -46 0z M54 316 h46 v10 q-23 8 -46 0z" fill="#0c0c0e"/><path d="M3 318 h40" stroke="#3a3a40" stroke-width="2"/></g><g class="torso"><path d="M43 88 h14 v18 h-14z" fill="#c98f4e"/><path d="M4 112 C8 102 22 98 50 98 C78 98 92 102 96 112 L90 206 L10 206 Z" fill="url(#vSuit)"/><path d="M36 98 L50 150 L64 98 Z" fill="#111114"/><path d="M36 98 L50 120 L26 132 L22 104 Z M64 98 L50 120 L74 132 L78 104 Z" fill="#666b73" stroke="#4a4e55" stroke-width="1.4"/><path d="M27 104 L46 206 M73 104 L54 206" stroke="#3e4248" stroke-width="2.4" fill="none"/><path d="M18 168 h16 M66 168 h16" stroke="#3e4248" stroke-width="2.2"/><circle cx="50" cy="176" r="2.6" fill="#2a2d33"/></g><g class="armL"><path d="M4 110 C-4 112 -9 130 -9 150 L-7 198 L9 198 L12 150 C12 132 12 116 4 110 Z" fill="url(#vSl)"/><circle class="hand" cx="1" cy="203" r="7.5" fill="#c98f4e"/></g><g class="armR"><path d="M96 110 C104 112 109 130 109 150 L107 198 L91 198 L88 150 C88 132 88 116 96 110 Z" fill="url(#vSl)"/><g class="hand"><circle cx="99" cy="203" r="7.5" fill="#c98f4e"/><path d="M99 209 v12" stroke="#c98f4e" stroke-width="4.5" stroke-linecap="round"/></g></g></svg>
+          <div class="thick fzt"></div>
+          <img class="ph" data-img="frozenparatha" alt="A pale paratha cooked from frozen, with frost on it and sunglasses">
+          <div class="shade"></div>
+          <svg class="face" viewBox="0 0 100 100" aria-hidden="true">
+            <g stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity=".95"><path d="M80 14 v12 M74 20 h12 M76 16 l8 8 M84 16 l-8 8"/><path d="M14 74 v8 M10 78 h8"/></g>
+            <g class="shades"><path d="M20 40 h60" stroke="#0d0d12" stroke-width="2.4"/><rect x="21" y="36" width="25" height="15" rx="6" fill="#111118"/><rect x="54" y="36" width="25" height="15" rx="6" fill="#111118"/><path d="M25 40 h7 M58 40 h7" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".55"/></g>
+            <path class="spark" d="M84 46 l1.5 4 l4 1.5 l-4 1.5 l-1.5 4 l-1.5 -4 l-4 -1.5 l4 -1.5z" fill="#fff"/>
+            <path class="fz-smirk" d="M37 68 Q52 76 64 64" stroke="#3a3a44" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+            <ellipse class="fz-talk" cx="51" cy="68" rx="8" ry="5.5" fill="#33333d"/>
+            <ellipse class="fz-o" cx="50" cy="68" rx="6" ry="7" fill="#33333d"/>
+            <g class="sweat" fill="#e9f7ff" stroke="#5d9bcf" stroke-width="1"><path d="M16 38 q-3 6 0 8 q3 -2 0 -8z"/><path d="M86 56 q-3 6 0 8 q3 -2 0 -8z"/></g>
+            <path class="drip" d="M30 96 q-3 6 0 8 q3 -2 0 -8z" fill="#9fd2f2"/><path class="drip b" d="M68 96 q-3 6 0 8 q3 -2 0 -8z" fill="#9fd2f2"/>
+          </svg>
+          <svg class="costume front" viewBox="0 -30 100 165" aria-hidden="true"><path d="M2 44 C-8 4 14 -34 50 -32 C88 -34 110 4 98 44 C94 26 80 14 52 15 C26 14 8 26 2 44 Z" fill="#15100c"/><path d="M14 -10 C26 -26 46 -28 60 -22 M58 -24 C72 -24 86 -14 90 -2" stroke="#3b2d23" stroke-width="2.4" fill="none" opacity=".8"/><path d="M3 40 L12 36 L12 66 L6 66 Z M97 40 L88 36 L88 66 L94 66 Z" fill="#15100c"/><path d="M20 31 L45 35 M55 35 L80 31" stroke="#15100c" stroke-width="5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="puddle"></div>
+        <div class="tag fz">Cooked from frozen</div>
+      </div>
+      <div class="char para">
+        <div class="tawa"><svg viewBox="0 0 200 50" preserveAspectRatio="none">
+          <g fill="#ff8a1f"><path class="flame" d="M34 42 q8 -36 15 0z"/><path class="flame" d="M60 44 q9 -44 17 0z" fill="#ffb02e"/><path class="flame" d="M91 46 q9 -50 18 0z"/><path class="flame" d="M123 44 q9 -44 17 0z" fill="#ffb02e"/><path class="flame" d="M151 42 q8 -36 15 0z"/></g>
+          <ellipse cx="100" cy="14" rx="98" ry="11" fill="#1d1d1f"/><ellipse cx="100" cy="11" rx="88" ry="7" fill="#3a3a3e"/>
+        </svg></div>
+        <div class="rays"></div>
+        <div class="steam"><i></i><i></i><i></i></div>
+        <svg class="costume full" viewBox="0 -30 100 360" aria-hidden="true"><defs><linearGradient id="rSh" x1="0" x2="1"><stop offset="0" stop-color="#d6c08c"/><stop offset=".45" stop-color="#b8a06a"/><stop offset="1" stop-color="#857043"/></linearGradient><linearGradient id="rSl" x1="0" x2="1"><stop offset="0" stop-color="#c9b27d"/><stop offset="1" stop-color="#8a7446"/></linearGradient><linearGradient id="rTr" x1="0" x2="1"><stop offset="0" stop-color="#bba26c"/><stop offset="1" stop-color="#7c683f"/></linearGradient></defs><ellipse cx="50" cy="327" rx="58" ry="9" fill="#000" opacity=".5"/><g class="legs"><path d="M14 196 L48 196 L47 318 L10 318 Z M52 196 L86 196 L90 318 L53 318 Z" fill="url(#rTr)"/><path d="M8 316 h40 v10 q-20 8 -40 0z M52 316 h40 v10 q-20 8 -40 0z" fill="#0c0c0e"/></g><g class="torso"><path d="M43 88 h14 v18 h-14z" fill="#c98f4e"/><path d="M4 112 C8 102 22 98 50 98 C78 98 92 102 96 112 L92 192 L8 192 Z" fill="url(#rSh)"/><path d="M36 98 L50 116 L28 124 Z M64 98 L50 116 L72 124 Z" fill="#a48c58" stroke="#8a7444" stroke-width="1"/><path d="M2 112 L22 102 L25 109 L5 119 Z M98 112 L78 102 L75 109 L95 119 Z" fill="#7d6a40"/><path d="M8 186 h84 v10 h-84z" fill="#3b2a1a"/><path d="M45 186 h10 v10 h-10z" fill="#e2b33c"/><g fill="#e2b33c"><circle cx="50" cy="130" r="2.4"/><circle cx="50" cy="150" r="2.4"/><circle cx="50" cy="170" r="2.4"/></g><path d="M58 136 h18 v4 h-18z M24 136 h18 v4 h-18z" fill="#8a7444"/></g><g class="armL"><path d="M4 110 C-4 112 -9 130 -9 150 L-7 192 L9 192 L12 150 C12 132 12 116 4 110 Z" fill="url(#rSl)"/><circle cx="1" cy="197" r="7.5" fill="#c98f4e"/></g><g class="armR"><path d="M96 110 C104 112 109 130 109 150 L107 192 L91 192 L88 150 C88 132 88 116 96 110 Z" fill="url(#rSl)"/><circle cx="99" cy="197" r="7.5" fill="#c98f4e"/></g></svg>
+        <div class="thick"></div>
+        <img class="ph" data-img="tawaparatha" alt="A golden paneer paratha with melting butter and a small cartoon face">
+        <div class="shade"></div>
+        <svg class="face" viewBox="0 0 100 100" aria-hidden="true">
+          <ellipse class="pupil" cx="38" cy="45" rx="3.6" ry="4.6" fill="#1a0c04" stroke="#fff3d6" stroke-width=".9" stroke-opacity=".7"/><ellipse class="pupil" cx="62" cy="45" rx="3.6" ry="4.6" fill="#1a0c04" stroke="#fff3d6" stroke-width=".9" stroke-opacity=".7"/>
+          <circle cx="39.2" cy="43.6" r="1.1" fill="#fff"/><circle cx="63.2" cy="43.6" r="1.1" fill="#fff"/>
+          <path class="brow l" d="M32 36 Q38 33.5 44 35.5" stroke="#2a1606" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+          <path class="brow r" d="M56 35.5 Q62 33.5 68 36" stroke="#2a1606" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+          <path class="pf-smile" d="M43 62 Q50 67 57 62" stroke="#2a1606" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <path class="pf-flat" d="M44 63 Q50 64.5 56 63" stroke="#2a1606" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <ellipse class="pf-talk" cx="50" cy="63" rx="4.5" ry="3.6" fill="#3a1408"/>
+          <path class="pf-smug" d="M42 62 Q51 68 59 60" stroke="#2a1606" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        </svg>
+        <svg class="costume front" viewBox="0 -30 100 165" aria-hidden="true"><path d="M14 16 C14 -8 30 -20 52 -20 C74 -20 88 -8 86 16 C80 8 70 4 60 4 C56 -1 50 -2 45 3 C34 4 22 8 14 16 Z" fill="#1a120c"/><path d="M44 -17 C39 -8 41 -1 45 3 M58 -17 C70 -15 80 -8 84 4" stroke="#4a3a2c" stroke-width="2" fill="none" opacity=".8"/></svg>
+        <div class="tag pa">Ghar jaisa</div>
+      </div>
+    </div>
+
+    <!-- hero insert on "garam tawa hai": the hot tawa with a paratha cooking, butter melting, steam rising -->
+    <div class="hero" aria-hidden="true">
+      <div class="hrays"></div>
+      <svg class="hstove" viewBox="0 0 200 120">
+        <defs><radialGradient id="tw" cx=".45" cy=".4" r=".6"><stop offset="0" stop-color="#4a4a50"/><stop offset=".7" stop-color="#1e1e22"/><stop offset="1" stop-color="#0c0c0e"/></radialGradient>
+        <radialGradient id="heat" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff9a2e" stop-opacity=".9"/><stop offset="1" stop-color="#ff5a1a" stop-opacity="0"/></radialGradient></defs>
+        <ellipse cx="100" cy="78" rx="96" ry="34" fill="url(#heat)"/>
+        <g class="hflames"><path class="flame" d="M33 108 C30 96 39 90 42 72 C45 90 54 96 51 108 Q42 113 33 108 Z" fill="#ff7a1a"/><path class="flame" d="M55 108 C52 96 61 90 64 64 C67 90 76 96 73 108 Q64 113 55 108 Z" fill="#ffb02e"/><path class="flame" d="M79 108 C76 96 85 90 88 60 C91 90 100 96 97 108 Q88 113 79 108 Z" fill="#ff8a1f"/><path class="flame" d="M103 108 C100 96 109 90 112 60 C115 90 124 96 121 108 Q112 113 103 108 Z" fill="#ffb02e"/><path class="flame" d="M127 108 C124 96 133 90 136 64 C139 90 148 96 145 108 Q136 113 127 108 Z" fill="#ff8a1f"/><path class="flame" d="M149 108 C146 96 155 90 158 72 C161 90 170 96 167 108 Q158 113 149 108 Z" fill="#ffb02e"/><path class="flame" d="M67 108 C64 96 73 90 76 86 C79 90 88 96 85 108 Q76 113 67 108 Z" fill="#5ab4ff" opacity=".85"/><path class="flame" d="M115 108 C112 96 121 90 124 86 C127 90 136 96 133 108 Q124 113 115 108 Z" fill="#5ab4ff" opacity=".85"/></g>
+        
+        <path d="M186 50 L206 44" stroke="#2a1a10" stroke-width="9" stroke-linecap="round"/>
+        <ellipse cx="100" cy="58" rx="94" ry="40" fill="#0b0b0d"/>
+        <ellipse cx="100" cy="54" rx="90" ry="37" fill="url(#tw)"/>
+        <ellipse cx="100" cy="54" rx="90" ry="37" fill="none" stroke="#ff7a2a" stroke-width="1.6" opacity=".55"/>
+      </svg>
+      <img class="ph hpar" data-img="tawaparatha" alt="A paratha cooking on a hot tawa with butter melting on it">
+      <div class="hshine"></div>
+      <div class="hsteam"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="hbub"><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <!-- 1 · 0–2s · hook: both on screen from frame one, open loop -->
+    <section class="scene" data-s="0">
+      <div class="txt">
+        <div class="h1" data-at="0" data-to="2.6">When a <span class="ice">frozen paratha</span> shows off to a <span class="sf">ghar jaisa paratha</span></div>
+        <div class="kicker" data-at="3.6">Wait for the reply</div>
+      </div>
+    </section>
+    <!-- 2 · 2–8s · the show-off, one line per shot, a 1s cut to the ghar jaisa paratha's reaction between lines -->
+    <section class="scene" data-s="1">
+      <div class="txt">
+        <div class="line big ice cap" data-at="0" data-to="1.8">“Aaj mere paas freezer hai,</div>
+        <div class="line big ice cap" data-at="2.8" data-to="4">microwave hai,</div>
+        <div class="line big ice cap" data-at="5">6 mahine ki shelf life hai…”</div>
+      </div>
+    </section>
+    <!-- 3 · 8–9.8s · the question, extreme close-up -->
+    <section class="scene" data-s="2">
+      <div class="txt">
+        <div class="line big ice slam" data-at=".1">“Tumhare paas kya hai?”</div>
+      </div>
+    </section>
+    <!-- 4 · 9.8–11.8s · intimidated reaction: push-in on the paratha, no caption -->
+    <section class="scene" data-s="3"></section>
+    <!-- 5 · 11.8–15.4s · punchline: flash and shake on "garam tawa hai" -->
+    <section class="scene" data-s="4">
+      <div class="txt">
+        <div class="line" data-at=".1">“Mere paas…</div>
+        <div class="line big sf slam" data-at="1.2">garam tawa hai.”</div>
+      </div>
+    </section>
+    <!-- 6 · 15.4–18s · the melt -->
+    <section class="scene" data-s="5">
+      <div class="txt" style="top:20cqw">
+        <div class="h1" data-at=".2"><span class="sf">Ghar jaisa</span> hamesha<br><span class="ice">frozen</span> se behtar!</div>
+      </div>
+    </section>
+    <!-- 7 · end card with the sound logo -->
+    <section class="scene" data-s="7">
+      <div class="txt" style="top:16cqw;gap:6cqw">
+        <div class="promise" data-at=".2">Parathas rolled and cooked<br><span class="sf">hot when you order</span></div>
+        <div class="rule" data-at=".6"></div>
+        <div class="lockup" data-at="1.15"><img src="{{LOCKUPT}}" alt="Shuddh Desi Bites, Quality meets Value"></div>
+        <div class="avail" data-at="2.3"><span>Available on</span>
+          <div class="logos small">
+            <span class="logo-chip"><span class="zomato">zomato</span></span>
+            <span class="logo-chip"><img src="{{SWIGGY}}" alt="Swiggy"></span>
+            <span class="logo-chip ownly"><img src="{{OWNLY}}" alt="Ownly"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="flash" id="flash"></div><div class="vig"></div><div class="grain"></div>
+  <div class="lb t"></div><div class="lb b"></div>
+  <div class="safe" id="safeguide" hidden></div>
+  <div class="start" id="start">
+    <button class="go" id="go" type="button"><b>Start reel</b><span>Plays 27s with sound · Space pauses · R restarts<br>V mutes the voices · M mutes all · F full screen · Z shows the safe zone</span></button>
+  </div>
+</div>
+
+<script>
+{{SOUNDLOGO}}
+const IMG={{IMGS}};
+/* d: seconds on screen (total 23.6). shots: [local second, camera] hard cuts inside a scene. fx: [local second, 'shake'|'flash'].
+   vo: [voice clip, local second]: Hindi dialogue voices (voice/*.wav, offline TTS), music ducks under them. V mutes the voices. Shorter reel, a cut every 1 to 1.5s, so viewers stay to the end. */
+const S=[
+ {d:4.4,shots:[[0,'wide'],[2.6,'two'],[2.9,'z2'],[3.2,'z3'],[3.8,'two']],fx:[[2.6,'shake'],[2.9,'shake'],[3.2,'shake']]},
+ {d:7.2,shots:[[0,'fclose'],[1.8,'preact'],[2.8,'fclose'],[4,'preact'],[5,'fclose']],talk:[[0,1.85],[2.8,3.95],[5,7.05]],vo:[['f1',0],['f2',2.8],['f3',5]]},
+ {d:1.8,shots:[[0,'fask']],fx:[[.1,'shake']],talk:[[.1,1.7]],vo:[['f4',.1]]},
+ {d:2,shots:[[0,'pclose']]},
+ {d:4.4,shots:[[0,'punch'],[1.2,'tawa'],[3,'punch2']],fx:[[1.2,'flash'],[1.2,'shake']],ptalk:[[.1,1.15],[1.2,2.55]],vo:[['p1',.1],['p2',1.2]]},
+ {d:3,shots:[[0,'melt']]},
+ {d:4,shots:[[0,'gone']]}
+];
+const TOTAL=26.8,starts=[];let acc=0;S.forEach(s=>{starts.push(acc);acc+=s.d});
+const LOGO_T=starts[6];
+const $=id=>document.getElementById(id),stage=$('stage');
+if(location.hash==='#safe')$('safeguide').hidden=false;
+document.querySelectorAll('img.ph').forEach(p=>{const u=IMG[p.dataset.img];if(u)p.src=u});
+const scenes=[...document.querySelectorAll('.scene')];
+let t=0,playing=false,last=null,cur=-1;
+function setScene(i){
+  if(i===cur)return;cur=i;
+  scenes.forEach(el=>el.classList.remove('on'));scenes[i].classList.add('on');
+}
+const within=(l,w)=>(w||[]).some(([a,b])=>l>=a&&l<b);
+let fxDone={};
+function render(){
+  let i=S.length-1;for(let k=0;k<S.length;k++){if(t<starts[k]+S[k].d){i=k;break}}
+  if(t===0&&!playing){stage.dataset.cast='out';scenes.forEach(s=>s.classList.remove('on'));cur=-1;return}
+  setScene(i);const l=t-starts[i];
+  let shot=S[i].shots[0][1];S[i].shots.forEach(([a,c])=>{if(l>=a)shot=c});
+  if(stage.dataset.cast!==shot)stage.dataset.cast=shot;   // hard cut: no transitions on the cast
+  scenes[i].querySelectorAll('[data-at]').forEach(e=>e.classList.toggle('show',l>=+e.dataset.at&&!(e.dataset.to&&l>=+e.dataset.to)));
+  (S[i].fx||[]).forEach(([a,f])=>{const key=i+':'+a+f;const on=l>=a&&l<a+.35;
+    if(on&&!fxDone[key]){fxDone[key]=1;const el=f==='flash'?$('flash'):$('box');el.classList.remove(f==='flash'?'go':'shake');void el.offsetWidth;el.classList.add(f==='flash'?'go':'shake')}
+    if(l<a)fxDone[key]=0});
+  stage.classList.toggle('talkF',within(l,S[i].talk));
+  stage.classList.toggle('talkP',within(l,S[i].ptalk));
+}
+
+/* ---------- dialogue voices: offline Hindi TTS clips embedded by build.py; the frozen paratha is pitched down for a smug, heavy voice ---------- */
+const VOICE={{VOICE}},VDETUNE={f1:-100,f2:-100,f3:-100,f4:-100};let voOff=false,voBus=null,voBufs=null;
+async function loadVoices(a){if(voBufs)return voBufs;voBufs={};for(const k in VOICE){try{voBufs[k]=await a.decodeAudioData(await (await fetch(VOICE[k])).arrayBuffer())}catch(e){}}return voBufs}
+
+/* ---------- score: an original 70s-Bollywood-style parody score, synthesised in the browser (no licence needed) ----------
+   hook sting "dhan dhan dhaaan" · suspense strings and heartbeat under the boasts, gulps on each reaction cut · swell and timpani roll on the question
+   heartbeats and gulps on the intimidated close-up · big hit and tawa sizzle on "garam tawa hai" · sad trombone for the melt · SDB sound logo */
+let AC=null,bus=null,logoBus=null,t0=0,muted=false;const VOL=0.85;
+function ctx(){if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();return AC}
+let noiseBuf=null;
+function noise(){if(noiseBuf)return noiseBuf;const a=ctx(),b=a.createBuffer(1,a.sampleRate*2,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return noiseBuf=b}
+function env(g,at,peak,dec,att=.005){g.gain.setValueAtTime(0.0001,at);g.gain.exponentialRampToValueAtTime(peak,at+att);g.gain.exponentialRampToValueAtTime(0.0001,at+att+dec)}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function timp(at,v=1){const a=ctx(),o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(105,at);o.frequency.exponentialRampToValueAtTime(52,at+.5);env(g,at,.9*v,1.3);o.connect(g).connect(bus);o.start(at);o.stop(at+1.4);
+  const n=a.createBufferSource(),f=a.createBiquadFilter(),g2=a.createGain();n.buffer=noise();f.type='lowpass';f.frequency.value=500;env(g2,at,.35*v,.25);n.connect(f).connect(g2).connect(bus);n.start(at);n.stop(at+.3)}
+function brass(at,notes,dur,v=1){const a=ctx(),f=a.createBiquadFilter(),g=a.createGain();f.type='lowpass';f.frequency.setValueAtTime(3400,at);f.frequency.exponentialRampToValueAtTime(900,at+dur);
+  g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(.12*v,at+.015);g.gain.setValueAtTime(.1*v,at+Math.max(.03,dur-.15));g.gain.exponentialRampToValueAtTime(.0001,at+dur+.2);f.connect(g).connect(bus);
+  notes.forEach(m=>[-7,7].forEach(c=>{const o=a.createOscillator();o.type='sawtooth';o.frequency.value=mtof(m);o.detune.value=c;o.connect(f);o.start(at);o.stop(at+dur+.25)}))}
+function strings(at,notes,dur,v=1,trem=0){const a=ctx(),f=a.createBiquadFilter(),g=a.createGain();f.type='lowpass';f.frequency.value=1500;
+  g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(.05*v,at+Math.min(.6,dur/2));g.gain.setValueAtTime(.05*v,at+dur-.3);g.gain.exponentialRampToValueAtTime(.0001,at+dur+.3);
+  let out=g;if(trem){const tg=a.createGain(),lfo=a.createOscillator(),ld=a.createGain();lfo.frequency.value=trem;ld.gain.value=.5;tg.gain.value=.5;lfo.connect(ld).connect(tg.gain);lfo.start(at);lfo.stop(at+dur+.4);g.connect(tg);out=tg}
+  f.connect(g);out.connect(bus);
+  notes.forEach(m=>[-9,0,9].forEach(c=>{const o=a.createOscillator();o.type='sawtooth';o.frequency.value=mtof(m);o.detune.value=c;o.connect(f);o.start(at);o.stop(at+dur+.4)}))}
+function swell(at,notes,dur,v=1){const a=ctx(),f=a.createBiquadFilter(),g=a.createGain();f.type='lowpass';f.frequency.setValueAtTime(500,at);f.frequency.exponentialRampToValueAtTime(3500,at+dur);
+  g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(.09*v,at+dur);g.gain.exponentialRampToValueAtTime(.0001,at+dur+.08);f.connect(g).connect(bus);
+  notes.forEach(m=>[-10,10].forEach(c=>{const o=a.createOscillator();o.type='sawtooth';o.frequency.value=mtof(m);o.detune.value=c;o.connect(f);o.start(at);o.stop(at+dur+.1)}))}
+function heart(at,v=1){[0,.2].forEach((d,k)=>{const a=ctx(),o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(75,at+d);o.frequency.exponentialRampToValueAtTime(42,at+d+.18);env(g,at+d,(k?.45:.75)*v,.28);o.connect(g).connect(bus);o.start(at+d);o.stop(at+d+.32)})}
+function bell(at,m,v=1){const a=ctx();[[1,.16],[2.76,.05],[5.4,.02]].forEach(([r,amp])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=mtof(m)*r;env(g,at,amp*v,r===1?.9:.35);o.connect(g).connect(bus);o.start(at);o.stop(at+1)})}
+function crash(at,v=1){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();f.type='highpass';f.frequency.value=4500;env(g,at,.22*v,1.6);n.connect(f).connect(g).connect(bus);n.start(at);n.stop(at+1.7)}
+function riser(at,len){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();n.loop=true;f.type='bandpass';f.Q.value=1.2;f.frequency.setValueAtTime(500,at-len);f.frequency.exponentialRampToValueAtTime(8000,at);g.gain.setValueAtTime(.0001,at-len);g.gain.exponentialRampToValueAtTime(.12,at-.01);g.gain.exponentialRampToValueAtTime(.0001,at+.03);n.connect(f).connect(g).connect(bus);n.start(at-len);n.stop(at+.05)}
+function sizzle(at,len){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();n.loop=true;f.type='highpass';f.frequency.value=3200;
+  g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(.05,at+.15);for(let x=at+.15;x<at+len-.3;x+=.03+Math.random()*.05){g.gain.setValueAtTime(.03+Math.random()*.07,x)}g.gain.exponentialRampToValueAtTime(.0001,at+len);
+  n.connect(f).connect(g).connect(bus);n.start(at);n.stop(at+len+.05)}
+function trombone(at){const a=ctx(),notes=[[55,.42],[54,.42],[53,.42],[52,1.4]];let x=at;
+  notes.forEach(([m,d],k)=>{const o=a.createOscillator(),f=a.createBiquadFilter(),g=a.createGain();o.type='sawtooth';o.frequency.value=mtof(m);
+    if(k===3){const l=a.createOscillator(),lg=a.createGain();l.frequency.value=5.5;lg.gain.value=6;l.connect(lg).connect(o.frequency);l.start(x);l.stop(x+d)}
+    f.type='lowpass';f.Q.value=4;f.frequency.setValueAtTime(350,x);f.frequency.exponentialRampToValueAtTime(1500,x+.18);f.frequency.exponentialRampToValueAtTime(600,x+d);
+    g.gain.setValueAtTime(.0001,x);g.gain.exponentialRampToValueAtTime(.16,x+.04);g.gain.setValueAtTime(.14,x+d-.08);g.gain.exponentialRampToValueAtTime(.0001,x+d);
+    o.connect(f).connect(g).connect(bus);o.start(x);o.stop(x+d+.02);x+=d})}
+function gulp(at){const a=ctx(),o=a.createOscillator(),g=a.createGain(),f=a.createBiquadFilter();o.type='triangle';o.frequency.setValueAtTime(260,at);o.frequency.exponentialRampToValueAtTime(820,at+.13);f.type='lowpass';f.frequency.value=1600;env(g,at,.35,.16,.01);o.connect(f).connect(g).connect(bus);o.start(at);o.stop(at+.2)}
+function dagga(at,v=1){const a=ctx(),o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(120,at);o.frequency.exponentialRampToValueAtTime(55,at+.12);env(g,at,.85*v,.26);o.connect(g).connect(bus);o.start(at);o.stop(at+.3)}
+function tilli(at,v=1){const a=ctx(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();n.buffer=noise();f.type='bandpass';f.frequency.value=2800;f.Q.value=1.8;env(g,at,.4*v,.07);n.connect(f).connect(g).connect(bus);n.start(at);n.stop(at+.1)}
+function score(T){
+  const s=starts;   // every cue follows its scene, so scene lengths can change without re-timing the music
+  // hook sting: dhan, dhan, dhaaan
+  strings(T,[38,45],2.65,.45,4);   // wide shot of the flyover: low night drone
+  brass(T+2.6,[50,57,62],.2);timp(T+2.6,.8);
+  brass(T+2.9,[49,56,61],.2);timp(T+2.9,.8);
+  brass(T+3.2,[48,55,60,63],1.2,1.1);timp(T+3.2,1);
+  // the show-off: suspense drone, heartbeat, a bling after each boast
+  strings(T+s[1],[38,45,50],S[1].d,.8,6);
+  for(let x=T+s[1]+.1;x<T+s[2];x+=.6)heart(x,.4);
+  S[1].vo.forEach(([k,at],j)=>{bell(T+s[1]+at+.05,[81,84,88][j],.8);bell(T+s[1]+at+.13,[88,91,93][j],.45)});
+  // reaction cuts: nervous gulp and a quick tabla flutter
+  S[1].shots.filter(x=>x[1]==='preact').forEach(([at])=>{for(let x=0;x<.5;x+=.06)tilli(T+s[1]+at+.35+x,.35)});
+  // the question: hit, swell, timpani roll
+  brass(T+s[2]+.1,[51,58,63],.3,1);timp(T+s[2]+.1);swell(T+s[2]+.2,[51,58,63,70],S[2].d-.2,1.1);
+  for(let x=T+s[3]-.7;x<T+s[3]-.05;x+=.07)timp(x,.25+(x-T-s[3]+.7)*.7);
+  // intimidated close-up: heartbeats, gulps, nervous flutter, thin high tremolo
+  strings(T+s[3],[86],S[3].d-.1,.35,11);[.1,.7,1.3].forEach(d=>heart(T+s[3]+d,1));for(let x=T+s[3]+.4;x<T+s[4]-.2;x+=.07)tilli(x,.22);
+  // punchline, the big hit lands with "garam tawa hai"
+  brass(T+s[4]+.1,[50,57],.18,.5);
+  const hit=T+s[4]+S[4].fx[0][0];brass(hit,[50,57,62,66,69],1.4,1.25);timp(hit,1.2);crash(hit,1);sizzle(hit,T+s[5]-hit);
+  // the melt
+  trombone(T+s[5]+.2);
+  riser(T+LOGO_T-.25,1.2);
+}
+async function startAudio(){
+  const a=ctx();if(a.state==='suspended')await a.resume();
+  [bus,logoBus].forEach(old=>{if(old){old.gain.setTargetAtTime(0,a.currentTime,0.02);setTimeout(()=>old.disconnect(),300)}});
+  bus=a.createGain();bus.gain.value=muted?0:VOL;const lim=a.createDynamicsCompressor();lim.threshold.value=-10;lim.knee.value=6;lim.ratio.value=12;lim.attack.value=.003;lim.release.value=.15;bus.connect(lim).connect(a.destination);
+  const vb=await loadVoices(a);
+  t0=a.currentTime+0.06;score(t0);
+  voBus=a.createGain();voBus.gain.value=voOff||muted?0:1.15;voBus.connect(lim);
+  S.forEach((s,i)=>(s.vo||[]).forEach(([k,at])=>{const b=vb[k];if(!b)return;const src=a.createBufferSource();src.buffer=b;src.detune.value=VDETUNE[k]||0;src.connect(voBus);
+    const w=t0+starts[i]+at,len=b.duration*Math.pow(2,-(VDETUNE[k]||0)/1200);src.start(w);
+    if(!muted){bus.gain.setTargetAtTime(VOL*.4,w-.05,.04);bus.gain.setTargetAtTime(VOL,w+len,.12)}}));
+  logoBus=a.createGain();logoBus.gain.value=muted?0:1;logoBus.connect(lim);SDBSoundLogo.play(a,logoBus,t0+LOGO_T);
+}
+function tick(ts){
+  if(playing){
+    if(AC&&bus&&AC.state==='running')t=Math.min(TOTAL-0.001,Math.max(0,AC.currentTime-t0));
+    else{if(last!=null)t=Math.min(TOTAL-0.001,t+(ts-last)/1000);last=ts}
+    if(t>=TOTAL-0.001)playing=false;
+  }else last=null;
+  render();requestAnimationFrame(tick);
+}
+async function restart(){$('start').hidden=true;cur=-1;t=0;last=null;try{await startAudio()}catch(e){}playing=true;cur=-1}
+function togglePause(){if(!AC){playing=!playing;return}if(playing){playing=false;AC.suspend()}else{AC.resume();playing=true}}
+$('go').onclick=restart;
+addEventListener('keydown',e=>{
+  if(e.key===' '){e.preventDefault();if($('start').hidden)togglePause();else restart()}
+  else if(e.key==='r'||e.key==='R')restart();
+  else if(e.key==='z'||e.key==='Z')$('safeguide').hidden=!$('safeguide').hidden;
+  else if(e.key==='v'||e.key==='V'){voOff=!voOff;if(voBus)voBus.gain.setTargetAtTime(voOff||muted?0:1.15,ctx().currentTime,.03)}
+  else if(e.key==='m'||e.key==='M'){muted=!muted;const a=ctx();if(bus)bus.gain.setTargetAtTime(muted?0:VOL,a.currentTime,.03);if(voBus)voBus.gain.setTargetAtTime(muted||voOff?0:1.15,a.currentTime,.03);if(logoBus)logoBus.gain.setTargetAtTime(muted?0:1,a.currentTime,.03)}
+  else if(e.key==='f'||e.key==='F'){(document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.())?.catch?.(()=>{})}
+});
+/* frame check hook for screenshots: seek(12.3) or #t=12.3 shows that second, paused, without the start screen */
+function seek(s){$('start').hidden=true;playing=false;t=s;cur=-1;render()}
+{const m=location.hash.match(/t=([\d.]+)/);if(m)seek(+m[1])}
+window.seek=seek;
+render();requestAnimationFrame(tick);
+</script>
